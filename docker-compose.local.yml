@@ -1,0 +1,5 @@
+# Surcharge pour le mode local : expose PostgreSQL sur le port 5433
+services:
+  db:
+    ports:
+      - "5433:5432"
