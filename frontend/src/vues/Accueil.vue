@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { formaterMontant, LIBELLES_METHODE, NOMS_MOIS, telechargerExport } from '../services/api'
+import api, { formaterMontant, LIBELLES_METHODE, NOMS_MOIS, telechargerExport } from '../services/api'
 
 const tableau = ref(null)
 const chargement = ref(true)
@@ -29,9 +29,12 @@ const indicateurs = computed(() => {
 
 async function charger() {
   chargement.value = true
-  const { data } = await api.get('/api/tableau-de-bord')
-  tableau.value = data
-  chargement.value = false
+  try {
+    const { data } = await api.get('/api/tableau-de-bord')
+    tableau.value = data
+  } finally {
+    chargement.value = false
+  }
 }
 
 async function exporterExcel() {

@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useComptabiliteStore } from '../stores/comptabilite'
-import { formaterMontant, LIBELLES_METHODE, telechargerExport } from '../services/api'
+import api, { formaterMontant, LIBELLES_METHODE, telechargerExport } from '../services/api'
 
 const store = useComptabiliteStore()
 const router = useRouter()
@@ -16,9 +16,12 @@ const libelleMethode = computed(
 
 async function charger() {
   chargement.value = true
-  const { data } = await api.get(`/api/sommaire/${store.annee}`)
-  sommaire.value = data
-  chargement.value = false
+  try {
+    const { data } = await api.get(`/api/sommaire/${store.annee}`)
+    sommaire.value = data
+  } finally {
+    chargement.value = false
+  }
 }
 
 function allerAuMois(mois) {
