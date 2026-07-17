@@ -9,6 +9,7 @@ CATEGORIES_SYSTEME = [
     "Assurance commerciale",
     "Entretien véhicule",
     "Location véhicule",
+    "Nourriture",	
     "Téléphone",
     "Permis et licences",
     "Autre",
@@ -16,7 +17,7 @@ CATEGORIES_SYSTEME = [
 
 ANNEE_DEFAUT = 2026
 LOCATION_VEHICULE_JOURNALIERE = Decimal("110.00")
-
+ESSENCE_VEHICULE_JOURNALIERE = Decimal("35.00")
 
 def executer_seed():
     session = SessionLocale()

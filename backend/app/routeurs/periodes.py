@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
 from app.modeles import Depense, EntreeKilometrage, Revenu
+from app.pagination import appliquer_pagination, params_pagination
 from app.schemas import (
     DepenseCreate,
     DepenseReponse,
@@ -69,10 +70,16 @@ def generer_recurrentes(annee: int, mois: int, session: Session = Depends(obteni
 
 
 @routeur.get("/revenus", response_model=list[RevenuReponse])
-def lister_revenus(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def lister_revenus(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    pagination: tuple[int, int] = Depends(params_pagination),
+):
     _verifier_periode(annee, mois)
     donnees = obtenir_donnees_periode(session, annee, mois)
-    return donnees["revenus"]
+    decalage, limite = pagination
+    return appliquer_pagination(donnees["revenus"], decalage, limite)
 
 
 @routeur.post("/revenus", response_model=RevenuReponse, status_code=201)
@@ -130,9 +137,19 @@ def supprimer_revenu(
 
 
 @routeur.get("/depenses", response_model=list[DepenseReponse])
-def lister_depenses(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def lister_depenses(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    pagination: tuple[int, int] = Depends(params_pagination),
+):
     _verifier_periode(annee, mois)
-    return obtenir_donnees_periode(session, annee, mois)["depenses"]
+    decalage, limite = pagination
+    return appliquer_pagination(
+        obtenir_donnees_periode(session, annee, mois)["depenses"],
+        decalage,
+        limite,
+    )
 
 
 @routeur.post("/depenses", response_model=DepenseReponse, status_code=201)
@@ -202,9 +219,19 @@ def supprimer_depense(
 
 
 @routeur.get("/kilometrage")
-def lister_kilometrage(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def lister_kilometrage(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    pagination: tuple[int, int] = Depends(params_pagination),
+):
     _verifier_periode(annee, mois)
-    return obtenir_donnees_periode(session, annee, mois)["kilometrage"]
+    decalage, limite = pagination
+    return appliquer_pagination(
+        obtenir_donnees_periode(session, annee, mois)["kilometrage"],
+        decalage,
+        limite,
+    )
 
 
 @routeur.post("/kilometrage", response_model=EntreeKilometrageReponse, status_code=201)

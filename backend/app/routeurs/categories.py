@@ -3,14 +3,25 @@ from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
 from app.modeles import CategorieDepense
+from app.pagination import params_pagination
 from app.schemas import CategorieDepenseCreate, CategorieDepenseReponse
 
 routeur = APIRouter(prefix="/api/categories", tags=["categories"])
 
 
 @routeur.get("", response_model=list[CategorieDepenseReponse])
-def lister_categories(session: Session = Depends(obtenir_session)):
-    return session.query(CategorieDepense).order_by(CategorieDepense.nom).all()
+def lister_categories(
+    session: Session = Depends(obtenir_session),
+    pagination: tuple[int, int] = Depends(params_pagination),
+):
+    decalage, limite = pagination
+    return (
+        session.query(CategorieDepense)
+        .order_by(CategorieDepense.nom)
+        .offset(decalage)
+        .limit(limite)
+        .all()
+    )
 
 
 @routeur.post("", response_model=CategorieDepenseReponse, status_code=201)

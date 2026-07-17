@@ -1,23 +1,51 @@
 import axios from 'axios'
 
+const CLE_STOCKAGE = 'comptataxi_api_cle'
+
+export function lireCleApi() {
+  return localStorage.getItem(CLE_STOCKAGE) || import.meta.env.VITE_API_CLE || ''
+}
+
+export function enregistrerCleApi(cle) {
+  localStorage.setItem(CLE_STOCKAGE, cle.trim())
+}
+
+export function effacerCleApi() {
+  localStorage.removeItem(CLE_STOCKAGE)
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  headers: {
-    'X-API-Key': import.meta.env.VITE_API_CLE || '',
-  },
+  // Vide = même origine (déploiement Render)
+  baseURL: import.meta.env.VITE_API_URL || '',
+})
+
+api.interceptors.request.use((config) => {
+  const cle = lireCleApi()
+  if (cle) {
+    config.headers['X-API-Key'] = cle
+  }
+  return config
 })
 
 const abonnesErreur = []
+const abonnesNonAutorise = []
 
 export function surErreurApi(rappel) {
   abonnesErreur.push(rappel)
 }
 
+export function surNonAutorise(rappel) {
+  abonnesNonAutorise.push(rappel)
+}
+
 api.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
+    if (erreur.response?.status === 401) {
+      abonnesNonAutorise.forEach((rappel) => rappel())
+    }
     // Le conflit 409 (modification d'un mois passé) est géré localement
-    if (erreur.response?.status !== 409) {
+    if (erreur.response?.status !== 409 && erreur.response?.status !== 401) {
       const message =
         erreur.response?.data?.detail ||
         (erreur.request ? 'Le serveur est injoignable' : 'Une erreur est survenue')

@@ -1,0 +1,20 @@
+# Déploiement gratuit Render (Web Service Docker) + Neon (Postgres)
+# https://dashboard.render.com → New → Blueprint
+
+services:
+  - type: web
+    name: comptabilite-taxi
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/sante
+    envVars:
+      - key: ENVIRONNEMENT
+        value: production
+      - key: API_CLE
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

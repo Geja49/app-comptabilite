@@ -13,6 +13,7 @@ from app.modeles import (
 )
 from app.services import calculs, impots
 from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_fiscaux
+from app.pagination import LIMITE_MAX
 
 
 def obtenir_ou_creer_periode(session: Session, annee: int, mois: int) -> Periode:
@@ -104,7 +105,12 @@ def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Dep
     - mensuelle : une dépense par mois
     - par_jour_travail : une dépense par jour où un revenu est saisi
     """
-    recurrentes = session.query(DepenseRecurrente).filter_by(actif=True).all()
+    recurrentes = (
+        session.query(DepenseRecurrente)
+        .filter_by(actif=True)
+        .limit(LIMITE_MAX)
+        .all()
+    )
     creees: list[Depense] = []
     dates_travail = sorted({revenu.date for revenu in periode.revenus})
 

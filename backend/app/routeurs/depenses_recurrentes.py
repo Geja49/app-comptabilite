@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
 from app.modeles import DepenseRecurrente
+from app.pagination import params_pagination
 from app.schemas import DepenseRecurrenteCreate, DepenseRecurrenteReponse, DepenseRecurrenteUpdate
 
 routeur = APIRouter(prefix="/api/depenses-recurrentes", tags=["depenses-recurrentes"])
@@ -23,8 +24,18 @@ def _vers_reponse(recurrente: DepenseRecurrente) -> DepenseRecurrenteReponse:
 
 
 @routeur.get("", response_model=list[DepenseRecurrenteReponse])
-def lister_recurrentes(session: Session = Depends(obtenir_session)):
-    recurrentes = session.query(DepenseRecurrente).order_by(DepenseRecurrente.fournisseur).all()
+def lister_recurrentes(
+    session: Session = Depends(obtenir_session),
+    pagination: tuple[int, int] = Depends(params_pagination),
+):
+    decalage, limite = pagination
+    recurrentes = (
+        session.query(DepenseRecurrente)
+        .order_by(DepenseRecurrente.fournisseur)
+        .offset(decalage)
+        .limit(limite)
+        .all()
+    )
     return [_vers_reponse(r) for r in recurrentes]
 
 

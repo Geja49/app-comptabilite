@@ -9,6 +9,8 @@ class Parametres(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
     api_cle: str = ""
     environnement: str = "developpement"
+    # Limite du corps JSON (octets) — protège contre les requêtes trop volumineuses
+    taille_max_corps: int = 1_048_576
 
     @property
     def liste_cors(self) -> list[str]:

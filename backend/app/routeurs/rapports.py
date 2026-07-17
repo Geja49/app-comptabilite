@@ -128,8 +128,14 @@ def tableau_de_bord(session: Session = Depends(obtenir_session)):
         ))
 
     from app.modeles import FrequenceDepenseRecurrente
+    from app.pagination import LIMITE_MAX
 
-    recurrentes_actives = session.query(DepenseRecurrente).filter_by(actif=True).all()
+    recurrentes_actives = (
+        session.query(DepenseRecurrente)
+        .filter_by(actif=True)
+        .limit(LIMITE_MAX)
+        .all()
+    )
     dates_revenus = {r["date"] for r in donnees["revenus"]}
     depenses_par_recurrente = {}
     for d in donnees["depenses"]:

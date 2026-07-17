@@ -12,7 +12,8 @@ CHEMINS_PUBLICS = {"/api/sante"}
 class MiddlewareCleApi(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         chemin = request.url.path.rstrip("/") or "/"
-        if request.method == "OPTIONS" or chemin in CHEMINS_PUBLICS:
+        # Santé API + fichiers frontend (hors /api) restent publics
+        if request.method == "OPTIONS" or chemin in CHEMINS_PUBLICS or not chemin.startswith("/api"):
             return await call_next(request)
 
         attendu = parametres.api_cle
@@ -43,3 +44,21 @@ class MiddlewareEnTetesSecurite(BaseHTTPMiddleware):
         if parametres.est_production:
             reponse.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return reponse
+
+
+class MiddlewareLimiteCorps(BaseHTTPMiddleware):
+    """Refuse les requêtes dont Content-Length dépasse la limite configurée."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        contenu = request.headers.get("content-length")
+        if contenu is not None:
+            try:
+                taille = int(contenu)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"detail": "Content-Length invalide"})
+            if taille > parametres.taille_max_corps:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Corps de requête trop volumineux"},
+                )
+        return await call_next(request)

@@ -59,3 +59,30 @@ def test_en_tetes_securite_presents():
         assert reponse.headers.get("X-Content-Type-Options") == "nosniff"
         assert reponse.headers.get("X-Frame-Options") == "DENY"
         assert reponse.headers.get("Referrer-Policy") == "no-referrer"
+
+
+def test_corps_trop_volumineux_refuse():
+    with TestClient(app) as client:
+        reponse = client.post(
+            "/api/categories",
+            headers={
+                "X-API-Key": "cle-test-pytest",
+                "Content-Type": "application/json",
+                "Content-Length": str(2_000_000),
+            },
+            content=b"{}",
+        )
+        assert reponse.status_code == 413
+
+
+def test_pagination_categories_limite_max():
+    client = _client_avec_db()
+    try:
+        reponse = client.get(
+            "/api/categories",
+            params={"limite": 9999},
+            headers={"X-API-Key": "cle-test-pytest"},
+        )
+        assert reponse.status_code == 422
+    finally:
+        app.dependency_overrides.clear()

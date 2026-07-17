@@ -1,8 +1,14 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useComptabiliteStore } from './stores/comptabilite'
-import { NOMS_MOIS, surErreurApi } from './services/api'
+import {
+  enregistrerCleApi,
+  lireCleApi,
+  NOMS_MOIS,
+  surErreurApi,
+  surNonAutorise,
+} from './services/api'
 import SelecteurPeriode from './composants/SelecteurPeriode.vue'
 
 const route = useRoute()
@@ -49,12 +55,31 @@ const enTeteComplement = computed(() => {
 })
 
 const erreur = ref('')
+const demandeCle = ref(false)
+const saisieCle = ref('')
 let minuterie = null
 surErreurApi((message) => {
   erreur.value = message
   clearTimeout(minuterie)
   minuterie = setTimeout(() => (erreur.value = ''), 6000)
 })
+surNonAutorise(() => {
+  demandeCle.value = true
+})
+
+onMounted(() => {
+  if (!lireCleApi()) {
+    demandeCle.value = true
+  }
+})
+
+function validerCle() {
+  if (!saisieCle.value.trim()) return
+  enregistrerCleApi(saisieCle.value)
+  demandeCle.value = false
+  saisieCle.value = ''
+  window.location.reload()
+}
 </script>
 
 <template>
@@ -189,6 +214,34 @@ surErreurApi((message) => {
         <button class="text-white/80 hover:text-white" @click="erreur = ''">&times;</button>
       </div>
     </Transition>
+
+    <div
+      v-if="demandeCle"
+      class="fixed inset-0 z-[60] bg-encre/40 flex items-center justify-center p-4"
+    >
+      <form
+        class="bg-white rounded-2xl shadow-carte max-w-md w-full p-6 space-y-4"
+        @submit.prevent="validerCle"
+      >
+        <h2 class="text-lg font-extrabold text-encre">Clé d’accès</h2>
+        <p class="text-sm text-muet">
+          Entrez la clé API configurée sur le serveur (variable <code>API_CLE</code> dans Render).
+        </p>
+        <input
+          v-model="saisieCle"
+          type="password"
+          autocomplete="current-password"
+          class="w-full border border-trait rounded-xl px-3 py-2.5 text-sm"
+          placeholder="Votre clé API"
+        />
+        <button
+          type="submit"
+          class="w-full bg-indigo-600 text-white font-bold rounded-xl py-2.5 hover:bg-indigo-700 transition"
+        >
+          Continuer
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
