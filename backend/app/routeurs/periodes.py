@@ -42,6 +42,11 @@ def _verifier_modification_passee(annee: int, mois: int, confirme: bool):
         )
 
 
+def _exiger_appartenance_periode(entite, periode, detail: str = "Ressource introuvable"):
+    if not entite or entite.periode_id != periode.id:
+        raise HTTPException(status_code=404, detail=detail)
+
+
 @routeur.post("", status_code=201)
 def creer_periode(annee: int, mois: int, session: Session = Depends(obtenir_session)):
     _verifier_periode(annee, mois)
@@ -98,9 +103,9 @@ def modifier_revenu(
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     revenu = session.get(Revenu, revenu_id)
-    if not revenu:
-        raise HTTPException(status_code=404, detail="Revenu introuvable")
+    _exiger_appartenance_periode(revenu, periode, "Revenu introuvable")
     revenu.date = donnees.date
     revenu.nombre_courses = donnees.nombre_courses
     revenu.revenu_brut = donnees.revenu_brut
@@ -117,9 +122,9 @@ def supprimer_revenu(
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     revenu = session.get(Revenu, revenu_id)
-    if not revenu:
-        raise HTTPException(status_code=404, detail="Revenu introuvable")
+    _exiger_appartenance_periode(revenu, periode, "Revenu introuvable")
     session.delete(revenu)
     session.commit()
 
@@ -163,9 +168,9 @@ def modifier_depense(
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     depense = session.get(Depense, depense_id)
-    if not depense:
-        raise HTTPException(status_code=404, detail="Dépense introuvable")
+    _exiger_appartenance_periode(depense, periode, "Dépense introuvable")
     taxes = (
         calculs.calculer_taxes_depuis_ttc(donnees.montant_saisi)
         if donnees.saisie_ttc
@@ -189,9 +194,9 @@ def supprimer_depense(
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     depense = session.get(Depense, depense_id)
-    if not depense:
-        raise HTTPException(status_code=404, detail="Dépense introuvable")
+    _exiger_appartenance_periode(depense, periode, "Dépense introuvable")
     session.delete(depense)
     session.commit()
 
@@ -237,9 +242,9 @@ def modifier_kilometrage(
     valider_date_dans_periode(donnees.date, annee, mois)
     if donnees.odometre_fin < donnees.odometre_debut:
         raise HTTPException(status_code=400, detail="L'odomètre de fin doit être supérieur au début")
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     entree = session.get(EntreeKilometrage, entree_id)
-    if not entree:
-        raise HTTPException(status_code=404, detail="Entrée kilométrage introuvable")
+    _exiger_appartenance_periode(entree, periode, "Entrée kilométrage introuvable")
     entree.date = donnees.date
     entree.odometre_debut = donnees.odometre_debut
     entree.odometre_fin = donnees.odometre_fin
@@ -256,8 +261,8 @@ def supprimer_kilometrage(
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
+    periode = obtenir_ou_creer_periode(session, annee, mois)
     entree = session.get(EntreeKilometrage, entree_id)
-    if not entree:
-        raise HTTPException(status_code=404, detail="Entrée kilométrage introuvable")
+    _exiger_appartenance_periode(entree, periode, "Entrée kilométrage introuvable")
     session.delete(entree)
     session.commit()

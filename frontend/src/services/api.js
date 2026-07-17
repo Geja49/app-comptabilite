@@ -2,6 +2,9 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  headers: {
+    'X-API-Key': import.meta.env.VITE_API_CLE || '',
+  },
 })
 
 const abonnesErreur = []
@@ -23,6 +26,18 @@ api.interceptors.response.use(
     return Promise.reject(erreur)
   },
 )
+
+export async function telechargerExport(chemin, nomFichier) {
+  const { data } = await api.get(chemin, { responseType: 'blob' })
+  const url = URL.createObjectURL(data)
+  const lien = document.createElement('a')
+  lien.href = url
+  lien.download = nomFichier
+  document.body.appendChild(lien)
+  lien.click()
+  lien.remove()
+  URL.revokeObjectURL(url)
+}
 
 export default api
 

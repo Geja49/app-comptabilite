@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+frontend/.env.local
 *.pyc
 __pycache__/
 venv/
@@ -9,3 +10,6 @@ postgres_data/
 *.db
 *.sqlite
 *.sqlite3
+_hz.json
+herozion-*.json
+herozion-*.txt

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api, { formaterMontant, LIBELLES_METHODE, NOMS_MOIS } from '../services/api'
+import { formaterMontant, LIBELLES_METHODE, NOMS_MOIS, telechargerExport } from '../services/api'
 
 const tableau = ref(null)
 const chargement = ref(true)
@@ -34,15 +34,19 @@ async function charger() {
   chargement.value = false
 }
 
-function exporterExcel() {
+async function exporterExcel() {
   if (!tableau.value) return
   const { annee, mois } = tableau.value.periode
-  window.open(`${api.defaults.baseURL}/api/export/excel/${annee}/${mois}`, '_blank')
+  await telechargerExport(
+    `/api/export/excel/${annee}/${mois}`,
+    `comptabilite_${annee}_${String(mois).padStart(2, '0')}.xlsx`,
+  )
 }
 
-function exporterPdf() {
+async function exporterPdf() {
   if (!tableau.value) return
-  window.open(`${api.defaults.baseURL}/api/export/pdf/${tableau.value.periode.annee}`, '_blank')
+  const annee = tableau.value.periode.annee
+  await telechargerExport(`/api/export/pdf/${annee}`, `rapport_comptable_${annee}.pdf`)
 }
 
 onMounted(charger)

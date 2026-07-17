@@ -2,22 +2,25 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: comptabilite
-      POSTGRES_PASSWORD: comptabilite
-      POSTGRES_DB: comptabilite
+      POSTGRES_USER: ${POSTGRES_USER:-comptabilite}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:-comptabilite}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U comptabilite"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-comptabilite}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    # Pas de ports exposés vers l'hôte en production (réseau Docker interne uniquement)
 
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://comptabilite:comptabilite@db:5432/comptabilite
-      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-comptabilite}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-comptabilite}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      API_CLE: ${API_CLE:?Definir API_CLE dans .env}
+      ENVIRONNEMENT: ${ENVIRONNEMENT:-production}
     ports:
       - "8000:8000"
     depends_on:
@@ -31,7 +34,8 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      VITE_API_CLE: ${API_CLE:?Definir API_CLE dans .env}
     depends_on:
       - backend
     volumes:

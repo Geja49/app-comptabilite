@@ -30,6 +30,7 @@ def client():
 
     app.dependency_overrides[obtenir_session] = _session
     with TestClient(app) as test_client:
+        test_client.headers.update({"X-API-Key": "cle-test-pytest"})
         yield test_client
     app.dependency_overrides.clear()
 

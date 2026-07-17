@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useComptabiliteStore } from '../stores/comptabilite'
-import api, { formaterMontant, LIBELLES_METHODE } from '../services/api'
+import { formaterMontant, LIBELLES_METHODE, telechargerExport } from '../services/api'
 
 const store = useComptabiliteStore()
 const router = useRouter()
@@ -26,12 +26,15 @@ function allerAuMois(mois) {
   router.push('/revenus')
 }
 
-function exporterPdf() {
-  window.open(`${api.defaults.baseURL}/api/export/pdf/${store.annee}`, '_blank')
+async function exporterPdf() {
+  await telechargerExport(`/api/export/pdf/${store.annee}`, `rapport_comptable_${store.annee}.pdf`)
 }
 
-function exporterExcel(mois) {
-  window.open(`${api.defaults.baseURL}/api/export/excel/${store.annee}/${mois}`, '_blank')
+async function exporterExcel(mois) {
+  await telechargerExport(
+    `/api/export/excel/${store.annee}/${mois}`,
+    `comptabilite_${store.annee}_${String(mois).padStart(2, '0')}.xlsx`,
+  )
 }
 
 watch(() => store.annee, charger, { immediate: true })
