@@ -25,7 +25,7 @@ function nouvelle() {
     fournisseur: '',
     categorie_id: categories.value[0]?.id || 1,
     montant: 0,
-    montant_ttc: false,
+    montant_ttc: true,
     jour_du_mois: 1,
     frequence: 'mensuelle',
     actif: true,
@@ -56,7 +56,7 @@ onMounted(charger)
   <div class="space-y-6">
     <div class="flex justify-between items-center gap-3">
       <p class="text-sm text-muet">
-        La location véhicule (110 $) se génère pour chaque jour avec un revenu.
+        Les montants sont déjà avec taxes (TTC). La location véhicule (110 $) se génère pour chaque jour avec un revenu.
       </p>
       <button class="btn-primary" @click="nouvelle">Ajouter</button>
     </div>
@@ -91,7 +91,7 @@ onMounted(charger)
         <div class="flex items-end">
           <label class="flex items-center gap-2">
             <input v-model="formulaire.montant_ttc" type="checkbox" />
-            <span class="text-sm">Montant TTC</span>
+            <span class="text-sm">Montant déjà avec taxes (TTC)</span>
           </label>
         </div>
       </div>

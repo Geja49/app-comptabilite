@@ -19,7 +19,7 @@ class DepenseRecurrente(Base):
     fournisseur: Mapped[str] = mapped_column(String(200), nullable=False)
     categorie_id: Mapped[int] = mapped_column(ForeignKey("categories_depense.id"), nullable=False)
     montant: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    montant_ttc: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    montant_ttc: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     jour_du_mois: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     frequence: Mapped[str] = mapped_column(
         String(30), nullable=False, default=FrequenceDepenseRecurrente.MENSUELLE.value

@@ -47,12 +47,22 @@ def executer_seed():
                     fournisseur="Location véhicule",
                     categorie_id=categorie_location.id,
                     montant=LOCATION_VEHICULE_JOURNALIERE,
-                    montant_ttc=False,
+                    montant_ttc=True,
                     jour_du_mois=1,
                     frequence=FrequenceDepenseRecurrente.PAR_JOUR_TRAVAIL,
                     actif=True,
                 )
             )
+        elif location is not None:
+            # Les montants récurrents sont déjà TTC (taxes incluses)
+            location.montant_ttc = True
+            if location.montant != LOCATION_VEHICULE_JOURNALIERE:
+                location.montant = LOCATION_VEHICULE_JOURNALIERE
+
+        # Toutes les récurrentes existantes : montants déjà TTC
+        for recurrente in session.query(DepenseRecurrente).all():
+            if not recurrente.montant_ttc:
+                recurrente.montant_ttc = True
 
         # Compte admin initial (Render : ADMIN_EMAIL + ADMIN_MOT_DE_PASSE)
         if (

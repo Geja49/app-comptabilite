@@ -95,7 +95,7 @@ class DepenseRecurrenteBase(BaseModel):
     fournisseur: str = Field(min_length=1, max_length=200)
     categorie_id: int
     montant: Decimal = Field(gt=0)
-    montant_ttc: bool = False
+    montant_ttc: bool = True
     jour_du_mois: int = Field(ge=1, le=28, default=1)
     frequence: str = Field(default="mensuelle", pattern="^(mensuelle|par_jour_travail)$")
     actif: bool = True
