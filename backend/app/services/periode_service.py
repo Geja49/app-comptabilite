@@ -3,8 +3,16 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.modeles import CategorieDepense, Depense, DepenseRecurrente, EntreeKilometrage, Periode, Revenu
-from app.services import calculs
+from app.modeles import (
+    Depense,
+    DepenseRecurrente,
+    EntreeKilometrage,
+    FrequenceDepenseRecurrente,
+    Periode,
+    Revenu,
+)
+from app.services import calculs, impots
+from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_fiscaux
 
 
 def obtenir_ou_creer_periode(session: Session, annee: int, mois: int) -> Periode:
@@ -65,10 +73,60 @@ def construire_km_calcule(entree: EntreeKilometrage) -> dict:
     }
 
 
+def _creer_depense_depuis_recurrente(
+    session: Session,
+    periode: Periode,
+    recurrente: DepenseRecurrente,
+    date_depense: date,
+) -> Depense:
+    taxes = (
+        calculs.calculer_taxes_depuis_ttc(recurrente.montant)
+        if recurrente.montant_ttc
+        else calculs.calculer_taxes_depuis_ht(recurrente.montant)
+    )
+    depense = Depense(
+        periode_id=periode.id,
+        date=date_depense,
+        fournisseur=recurrente.fournisseur,
+        categorie_id=recurrente.categorie_id,
+        montant_ht=taxes["montant_ht"],
+        saisie_ttc=recurrente.montant_ttc,
+        montant_saisi=recurrente.montant,
+        depense_recurrente_id=recurrente.id,
+    )
+    session.add(depense)
+    return depense
+
+
 def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Depense]:
+    """Génère les dépenses manquantes selon la fréquence de chaque récurrente.
+
+    - mensuelle : une dépense par mois
+    - par_jour_travail : une dépense par jour où un revenu est saisi
+    """
     recurrentes = session.query(DepenseRecurrente).filter_by(actif=True).all()
     creees: list[Depense] = []
+    dates_travail = sorted({revenu.date for revenu in periode.revenus})
+
     for recurrente in recurrentes:
+        if recurrente.frequence == FrequenceDepenseRecurrente.PAR_JOUR_TRAVAIL:
+            for date_travail in dates_travail:
+                existe = (
+                    session.query(Depense)
+                    .filter_by(
+                        periode_id=periode.id,
+                        depense_recurrente_id=recurrente.id,
+                        date=date_travail,
+                    )
+                    .first()
+                )
+                if existe:
+                    continue
+                creees.append(
+                    _creer_depense_depuis_recurrente(session, periode, recurrente, date_travail)
+                )
+            continue
+
         existe = (
             session.query(Depense)
             .filter_by(periode_id=periode.id, depense_recurrente_id=recurrente.id)
@@ -77,24 +135,12 @@ def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Dep
         if existe:
             continue
         jour = min(recurrente.jour_du_mois, 28)
-        depense = Depense(
-            periode_id=periode.id,
-            date=date(periode.annee, periode.mois, jour),
-            fournisseur=recurrente.fournisseur,
-            categorie_id=recurrente.categorie_id,
-            montant_ht=Decimal("0"),
-            saisie_ttc=recurrente.montant_ttc,
-            montant_saisi=recurrente.montant,
-            depense_recurrente_id=recurrente.id,
+        creees.append(
+            _creer_depense_depuis_recurrente(
+                session, periode, recurrente, date(periode.annee, periode.mois, jour)
+            )
         )
-        taxes = (
-            calculs.calculer_taxes_depuis_ttc(recurrente.montant)
-            if recurrente.montant_ttc
-            else calculs.calculer_taxes_depuis_ht(recurrente.montant)
-        )
-        depense.montant_ht = taxes["montant_ht"]
-        session.add(depense)
-        creees.append(depense)
+
     if creees:
         session.commit()
         for depense in creees:
@@ -104,6 +150,7 @@ def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Dep
 
 def obtenir_donnees_periode(session: Session, annee: int, mois: int) -> dict:
     periode = obtenir_ou_creer_periode(session, annee, mois)
+    parametres = obtenir_ou_creer_parametres_fiscaux(session, annee)
     revenus = [construire_revenu_calcule(r) for r in sorted(periode.revenus, key=lambda x: x.date)]
     depenses = [construire_depense_calculee(d) for d in sorted(periode.depenses, key=lambda x: x.date)]
     km_entrees = [construire_km_calcule(e) for e in sorted(periode.entrees_kilometrage, key=lambda x: x.date)]
@@ -112,11 +159,19 @@ def obtenir_donnees_periode(session: Session, annee: int, mois: int) -> dict:
         "km_pro_mois": Decimal("0"),
         "taux_pro": Decimal("0"),
     }
-    sommaire = calculs.calculer_sommaire_mensuel(revenus, depenses, km_agrege["taux_pro"])
+    sommaire = impots.calculer_sommaire_mensuel(
+        revenus,
+        depenses,
+        km_agrege["taux_pro"],
+        methode=parametres.methode_tps_tvq,
+        tps_taux_rapide=parametres.tps_taux_rapide,
+        tvq_taux_rapide=parametres.tvq_taux_rapide,
+    )
     return {
         "periode": {"id": periode.id, "annee": annee, "mois": mois, "est_passee": est_periode_passee(annee, mois)},
         "revenus": revenus,
         "depenses": depenses,
         "kilometrage": {"entrees": km_entrees, "totaux": km_agrege},
         "sommaire": sommaire,
+        "parametres_fiscaux": parametres,
     }

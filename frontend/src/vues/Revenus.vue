@@ -66,7 +66,7 @@ onMounted(charger)
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h3 class="text-xl font-semibold">Registre des revenus</h3>
+      <p class="text-sm text-muet">Registre des journées</p>
       <button class="btn-primary" @click="nouveauRevenu">Ajouter une journée</button>
     </div>
 

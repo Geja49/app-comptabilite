@@ -6,6 +6,7 @@ import Kilometrage from '../vues/Kilometrage.vue'
 import Sommaire from '../vues/Sommaire.vue'
 import Categories from '../vues/Categories.vue'
 import DepensesRecurrentes from '../vues/DepensesRecurrentes.vue'
+import ParametresFiscaux from '../vues/ParametresFiscaux.vue'
 
 const routes = [
   { path: '/', name: 'accueil', component: Accueil },
@@ -15,6 +16,7 @@ const routes = [
   { path: '/sommaire', name: 'sommaire', component: Sommaire },
   { path: '/categories', name: 'categories', component: Categories },
   { path: '/depenses-recurrentes', name: 'depenses-recurrentes', component: DepensesRecurrentes },
+  { path: '/parametres-fiscaux', name: 'parametres-fiscaux', component: ParametresFiscaux },
 ]
 
 export default createRouter({

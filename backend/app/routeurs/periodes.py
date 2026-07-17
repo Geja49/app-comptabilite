@@ -86,6 +86,8 @@ def ajouter_revenu(annee: int, mois: int, donnees: RevenuCreate, session: Sessio
     session.add(revenu)
     session.commit()
     session.refresh(revenu)
+    # Location véhicule et autres dépenses « par jour de travail »
+    generer_depenses_recurrentes(session, periode)
     return construire_revenu_calcule(revenu)
 
 

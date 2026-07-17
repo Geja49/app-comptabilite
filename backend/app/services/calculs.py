@@ -67,26 +67,11 @@ def calculer_sommaire_mensuel(
     revenus: list[dict],
     depenses: list[dict],
     taux_pro: Decimal,
-) -> dict[str, Decimal]:
-    revenu_brut = sum((r["revenu_brut"] for r in revenus), Decimal("0"))
-    tps_percue = sum((r["tps_percue"] for r in revenus), Decimal("0"))
-    tvq_percue = sum((r["tvq_percue"] for r in revenus), Decimal("0"))
-    depenses_totales = sum((d["montant_total"] for d in depenses), Decimal("0"))
-    depenses_ht = sum((d["montant_ht"] for d in depenses), Decimal("0"))
-    tps_payee = sum((d["tps"] for d in depenses), Decimal("0"))
-    tvq_payee = sum((d["tvq"] for d in depenses), Decimal("0"))
-    tps_a_remettre = arrondir(tps_percue - tps_payee)
-    tvq_a_remettre = arrondir(tvq_percue - tvq_payee)
-    depenses_admissibles = arrondir(depenses_ht * taux_pro)
-    return {
-        "revenu_brut": arrondir(revenu_brut),
-        "tps_percue": arrondir(tps_percue),
-        "tvq_percue": arrondir(tvq_percue),
-        "depenses_totales": arrondir(depenses_totales),
-        "tps_payee": arrondir(tps_payee),
-        "tvq_payee": arrondir(tvq_payee),
-        "tps_a_remettre": tps_a_remettre,
-        "tvq_a_remettre": tvq_a_remettre,
-        "depenses_admissibles_proratees": depenses_admissibles,
-        "taux_pro": taux_pro,
-    }
+) -> dict:
+    """Conserve la compatibilité : sommaire selon la méthode régulière."""
+    from app.modeles.parametres_fiscaux import MethodeTpsTvq
+    from app.services import impots
+
+    return impots.calculer_sommaire_mensuel(
+        revenus, depenses, taux_pro, methode=MethodeTpsTvq.REGULIERE
+    )

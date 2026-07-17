@@ -6,6 +6,11 @@ const recurrentes = ref([])
 const categories = ref([])
 const formulaire = ref(null)
 
+const LIBELLES_FREQUENCE = {
+  mensuelle: 'Mensuelle',
+  par_jour_travail: 'Par jour de travail',
+}
+
 async function charger() {
   const [rec, cat] = await Promise.all([
     api.get('/api/depenses-recurrentes'),
@@ -22,6 +27,7 @@ function nouvelle() {
     montant: 0,
     montant_ttc: false,
     jour_du_mois: 1,
+    frequence: 'mensuelle',
     actif: true,
   }
 }
@@ -48,8 +54,10 @@ onMounted(charger)
 
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h3 class="text-xl font-semibold">Dépenses récurrentes</h3>
+    <div class="flex justify-between items-center gap-3">
+      <p class="text-sm text-muet">
+        La location véhicule (110 $) se génère pour chaque jour avec un revenu.
+      </p>
       <button class="btn-primary" @click="nouvelle">Ajouter</button>
     </div>
 
@@ -70,6 +78,13 @@ onMounted(charger)
           <input v-model.number="formulaire.montant" type="number" min="0" step="0.01" class="input" />
         </div>
         <div>
+          <label class="text-sm text-slate-600">Fréquence</label>
+          <select v-model="formulaire.frequence" class="input">
+            <option value="mensuelle">Mensuelle (1 fois / mois)</option>
+            <option value="par_jour_travail">Par jour de travail (si revenu saisi)</option>
+          </select>
+        </div>
+        <div v-if="formulaire.frequence === 'mensuelle'">
           <label class="text-sm text-slate-600">Jour du mois</label>
           <input v-model.number="formulaire.jour_du_mois" type="number" min="1" max="28" class="input" />
         </div>
@@ -93,7 +108,7 @@ onMounted(charger)
             <th>Fournisseur</th>
             <th>Catégorie</th>
             <th>Montant</th>
-            <th>Jour</th>
+            <th>Fréquence</th>
             <th>Statut</th>
             <th></th>
           </tr>
@@ -104,7 +119,12 @@ onMounted(charger)
             <td>{{ rec.fournisseur }}</td>
             <td>{{ rec.categorie_nom }}</td>
             <td>{{ formaterMontant(rec.montant) }} {{ rec.montant_ttc ? '(TTC)' : '(HT)' }}</td>
-            <td>{{ rec.jour_du_mois }}</td>
+            <td>
+              {{ LIBELLES_FREQUENCE[rec.frequence] || rec.frequence }}
+              <span v-if="rec.frequence === 'mensuelle'" class="text-slate-400 text-xs">
+                (jour {{ rec.jour_du_mois }})
+              </span>
+            </td>
             <td>
               <button
                 class="text-sm px-2 py-1 rounded"

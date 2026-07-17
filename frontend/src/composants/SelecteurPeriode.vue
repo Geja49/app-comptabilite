@@ -11,11 +11,15 @@ const annees = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5
 </script>
 
 <template>
-  <div class="flex items-center gap-3">
-    <select v-model="store.annee" class="input w-auto">
+  <div class="flex items-center gap-2 bg-surface border border-trait rounded-bouton p-1 shadow-douce">
+    <select v-model="store.annee" class="input border-0 shadow-none bg-transparent w-auto py-2 focus:ring-0">
       <option v-for="a in annees" :key="a" :value="a">{{ a }}</option>
     </select>
-    <select v-if="!modeAnnuel" v-model="store.mois" class="input w-auto">
+    <select
+      v-if="!modeAnnuel"
+      v-model="store.mois"
+      class="input border-0 shadow-none bg-transparent w-auto py-2 border-l border-trait rounded-none focus:ring-0"
+    >
       <option v-for="(nom, index) in NOMS_MOIS" :key="nom" :value="index + 1">{{ nom }}</option>
     </select>
   </div>

@@ -74,7 +74,7 @@ onMounted(charger)
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center flex-wrap gap-3">
-      <h3 class="text-xl font-semibold">Registre des dépenses</h3>
+      <p class="text-sm text-muet">Registre du mois</p>
       <div class="flex gap-2">
         <button class="btn-secondary" @click="genererRecurrentes">Générer récurrentes</button>
         <button class="btn-primary" @click="nouvelleDepense">Ajouter une dépense</button>

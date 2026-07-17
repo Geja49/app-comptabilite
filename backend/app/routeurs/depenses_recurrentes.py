@@ -17,6 +17,7 @@ def _vers_reponse(recurrente: DepenseRecurrente) -> DepenseRecurrenteReponse:
         montant=recurrente.montant,
         montant_ttc=recurrente.montant_ttc,
         jour_du_mois=recurrente.jour_du_mois,
+        frequence=recurrente.frequence,
         actif=recurrente.actif,
     )
 

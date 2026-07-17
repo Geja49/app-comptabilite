@@ -1,9 +1,31 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import api, { formaterMontant } from '../services/api'
+import { ref, computed, onMounted } from 'vue'
+import api, { formaterMontant, LIBELLES_METHODE, NOMS_MOIS } from '../services/api'
 
 const tableau = ref(null)
 const chargement = ref(true)
+
+const libelleMethode = computed(
+  () => LIBELLES_METHODE[tableau.value?.sommaire?.methode_tps_tvq] || LIBELLES_METHODE.reguliere,
+)
+const estRapide = computed(() => tableau.value?.sommaire?.methode_tps_tvq === 'rapide')
+const libellePeriode = computed(() => {
+  if (!tableau.value) return ''
+  const { mois, annee } = tableau.value.periode
+  return `${NOMS_MOIS[mois - 1]} ${annee}`
+})
+
+const indicateurs = computed(() => {
+  if (!tableau.value) return []
+  const s = tableau.value.sommaire
+  return [
+    { label: 'Revenu brut', valeur: s.revenu_brut, teinte: 'text-emerald-700', fond: 'from-emerald-50 to-white' },
+    { label: 'Dépenses totales', valeur: s.depenses_totales, teinte: 'text-rose-600', fond: 'from-rose-50 to-white' },
+    { label: 'TPS à remettre', valeur: s.tps_a_remettre, teinte: 'text-indigo-700', fond: 'from-indigo-50 to-white' },
+    { label: 'TVQ à remettre', valeur: s.tvq_a_remettre, teinte: 'text-indigo-700', fond: 'from-indigo-50 to-white' },
+    { label: 'Redevance', valeur: s.redevance_totale, teinte: 'text-amber-700', fond: 'from-amber-50 to-white' },
+  ]
+})
 
 async function charger() {
   chargement.value = true
@@ -27,44 +49,90 @@ onMounted(charger)
 </script>
 
 <template>
-  <div v-if="chargement" class="text-slate-500">Chargement...</div>
+  <div v-if="chargement" class="text-muet">Chargement...</div>
   <div v-else class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="card">
-        <p class="text-sm text-slate-500">Revenu brut</p>
-        <p class="text-2xl font-bold text-green-700">{{ formaterMontant(tableau.sommaire.revenu_brut) }}</p>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="badge bg-indigo-50 text-indigo-700">{{ libellePeriode }}</span>
+        <RouterLink
+          to="/parametres-fiscaux"
+          class="badge hover:opacity-90 transition"
+          :class="estRapide ? 'bg-violet-100 text-violet-700' : 'bg-indigo-100 text-indigo-700'"
+        >
+          {{ libelleMethode }}
+        </RouterLink>
       </div>
-      <div class="card">
-        <p class="text-sm text-slate-500">Dépenses totales</p>
-        <p class="text-2xl font-bold text-red-600">{{ formaterMontant(tableau.sommaire.depenses_totales) }}</p>
-      </div>
-      <div class="card">
-        <p class="text-sm text-slate-500">TPS à remettre</p>
-        <p class="text-2xl font-bold text-blue-700">{{ formaterMontant(tableau.sommaire.tps_a_remettre) }}</p>
-      </div>
-      <div class="card">
-        <p class="text-sm text-slate-500">TVQ à remettre</p>
-        <p class="text-2xl font-bold text-blue-700">{{ formaterMontant(tableau.sommaire.tvq_a_remettre) }}</p>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-secondary" @click="exporterExcel">Exporter Excel</button>
+        <button class="btn-primary" @click="exporterPdf">Exporter PDF</button>
       </div>
     </div>
 
-    <div v-if="tableau.alertes.length" class="card border-amber-300 bg-amber-50">
-      <h3 class="font-semibold text-amber-800 mb-2">Alertes</h3>
-      <ul class="space-y-1">
-        <li v-for="(alerte, i) in tableau.alertes" :key="i" class="text-amber-700 text-sm">• {{ alerte.message }}</li>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div
+        v-for="item in indicateurs"
+        :key="item.label"
+        class="card bg-gradient-to-b p-5"
+        :class="item.fond"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-muet">{{ item.label }}</p>
+        <p class="text-2xl font-extrabold mt-2" :class="item.teinte">{{ formaterMontant(item.valeur) }}</p>
+      </div>
+    </div>
+
+    <div v-if="tableau.alertes.length" class="card border-amber-200 bg-amber-50/80">
+      <h3 class="font-bold text-amber-900 mb-2">Alertes</h3>
+      <ul class="space-y-1.5">
+        <li v-for="(alerte, i) in tableau.alertes" :key="i" class="text-amber-800 text-sm flex gap-2">
+          <span class="text-amber-500">•</span>
+          <span>{{ alerte.message }}</span>
+        </li>
       </ul>
     </div>
 
     <div class="card">
-      <h3 class="font-semibold mb-4">Accès rapide</h3>
-      <div class="flex flex-wrap gap-3">
-        <RouterLink to="/revenus" class="btn-primary">Revenus du mois</RouterLink>
-        <RouterLink to="/depenses" class="btn-primary">Dépenses du mois</RouterLink>
-        <RouterLink to="/kilometrage" class="btn-primary">Kilométrage</RouterLink>
-        <RouterLink to="/sommaire" class="btn-secondary">Sommaire annuel</RouterLink>
-        <button class="btn-secondary" @click="exporterExcel">Export Excel (mois)</button>
-        <button class="btn-secondary" @click="exporterPdf">Export PDF (année)</button>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-encre">Accès rapide</h3>
+          <p class="text-sm text-muet">Continuer la saisie du mois</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <RouterLink to="/revenus" class="lien-rapide">
+          <span class="nav-icone"><span class="text-sm font-bold">R</span></span>
+          <span>
+            <span class="block text-sm font-bold">Revenus</span>
+            <span class="block text-xs text-muet">Journées de courses</span>
+          </span>
+        </RouterLink>
+        <RouterLink to="/depenses" class="lien-rapide">
+          <span class="nav-icone"><span class="text-sm font-bold">D</span></span>
+          <span>
+            <span class="block text-sm font-bold">Dépenses</span>
+            <span class="block text-xs text-muet">Location et charges</span>
+          </span>
+        </RouterLink>
+        <RouterLink to="/kilometrage" class="lien-rapide">
+          <span class="nav-icone"><span class="text-sm font-bold">K</span></span>
+          <span>
+            <span class="block text-sm font-bold">Kilométrage</span>
+            <span class="block text-xs text-muet">Taux professionnel</span>
+          </span>
+        </RouterLink>
+        <RouterLink to="/sommaire" class="lien-rapide">
+          <span class="nav-icone"><span class="text-sm font-bold">S</span></span>
+          <span>
+            <span class="block text-sm font-bold">Sommaire</span>
+            <span class="block text-xs text-muet">Bilan de l’année</span>
+          </span>
+        </RouterLink>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.lien-rapide {
+  @apply flex items-center gap-3 p-3 rounded-xl border border-trait bg-barre hover:bg-white hover:shadow-douce transition;
+}
+</style>

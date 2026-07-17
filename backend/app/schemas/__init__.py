@@ -96,7 +96,8 @@ class DepenseRecurrenteBase(BaseModel):
     categorie_id: int
     montant: Decimal = Field(gt=0)
     montant_ttc: bool = False
-    jour_du_mois: int = Field(ge=1, le=28)
+    jour_du_mois: int = Field(ge=1, le=28, default=1)
+    frequence: str = Field(default="mensuelle", pattern="^(mensuelle|par_jour_travail)$")
     actif: bool = True
 
 
@@ -121,6 +122,23 @@ class PeriodeReponse(BaseModel):
     est_passee: bool
 
 
+class ParametresFiscauxReponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    annee: int
+    methode_tps_tvq: str
+    tps_taux_reguliere: Decimal
+    tvq_taux_reguliere: Decimal
+    tps_taux_rapide: Decimal
+    tvq_taux_rapide: Decimal
+    rabais_rapide_taux: Decimal
+    rabais_rapide_plafond: Decimal
+    redevance_par_course: Decimal
+
+
+class ParametresFiscauxUpdate(BaseModel):
+    methode_tps_tvq: str = Field(pattern="^(reguliere|rapide)$")
+
+
 class SommaireMensuelReponse(BaseModel):
     mois: int
     mois_nom: str
@@ -133,12 +151,18 @@ class SommaireMensuelReponse(BaseModel):
     tps_a_remettre: Decimal
     tvq_a_remettre: Decimal
     depenses_admissibles_proratees: Decimal
+    methode_tps_tvq: str = "reguliere"
+    redevance_totale: Decimal = Decimal("0")
+    revenu_total_ttc: Decimal = Decimal("0")
+    rabais_rapide_applique: Decimal = Decimal("0")
 
 
 class SommaireAnnuelReponse(BaseModel):
     annee: int
     mois: list[SommaireMensuelReponse]
     total: SommaireMensuelReponse
+    methode_tps_tvq: str = "reguliere"
+    rabais_rapide_applique: Decimal = Decimal("0")
 
 
 class AlerteReponse(BaseModel):

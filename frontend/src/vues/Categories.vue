@@ -28,8 +28,6 @@ onMounted(charger)
 
 <template>
   <div class="space-y-6 max-w-xl">
-    <h3 class="text-xl font-semibold">Catégories de dépenses</h3>
-
     <div class="card space-y-4">
       <ul class="space-y-2">
         <li v-for="cat in categories" :key="cat.id" class="flex justify-between items-center py-2 border-b border-slate-100">
