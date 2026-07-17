@@ -21,7 +21,7 @@ const modeAnnuel = computed(() => ['sommaire', 'parametres-fiscaux'].includes(ro
 const titrePeriode = computed(() => `${NOMS_MOIS[store.mois - 1]} ${store.annee}`)
 
 const saisieOuverte = computed(() =>
-  ['revenus', 'depenses', 'kilometrage'].includes(route.name),
+  ['revenus', 'depenses', 'kilometrage', 'tresorerie'].includes(route.name),
 )
 const configOuverte = computed(() =>
   ['categories', 'depenses-recurrentes', 'parametres-fiscaux'].includes(route.name),
@@ -31,6 +31,7 @@ const liensSaisie = [
   { to: '/revenus', label: 'Revenus', description: 'Courses et encaissements' },
   { to: '/depenses', label: 'Dépenses', description: 'Achats et charges' },
   { to: '/kilometrage', label: 'Kilométrage', description: 'Usage professionnel' },
+  { to: '/tresorerie', label: 'Trésorerie', description: 'Caisse et banque' },
 ]
 
 const liensConfig = [
@@ -44,6 +45,7 @@ const titresPage = {
   revenus: { titre: 'Revenus', sousTitre: 'Saisie journalière des courses' },
   depenses: { titre: 'Dépenses', sousTitre: 'Charges et location véhicule' },
   kilometrage: { titre: 'Kilométrage', sousTitre: 'Suivi odomètre et taux pro' },
+  tresorerie: { titre: 'Trésorerie', sousTitre: 'Caisse, banque et encaissements en temps réel' },
   sommaire: { titre: 'Sommaire annuel', sousTitre: 'Performance et taxes à remettre' },
   categories: { titre: 'Catégories', sousTitre: 'Organisation des dépenses' },
   'depenses-recurrentes': { titre: 'Dépenses récurrentes', sousTitre: 'Génération automatique mensuelle ou journalière' },

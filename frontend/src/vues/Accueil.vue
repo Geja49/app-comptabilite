@@ -104,7 +104,7 @@ onMounted(charger)
           <p class="text-sm text-muet">Continuer la saisie du mois</p>
         </div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <RouterLink to="/revenus" class="lien-rapide">
           <span class="nav-icone"><span class="text-sm font-bold">R</span></span>
           <span>
@@ -124,6 +124,13 @@ onMounted(charger)
           <span>
             <span class="block text-sm font-bold">Kilométrage</span>
             <span class="block text-xs text-muet">Taux professionnel</span>
+          </span>
+        </RouterLink>
+        <RouterLink to="/tresorerie" class="lien-rapide">
+          <span class="nav-icone"><span class="text-sm font-bold">T</span></span>
+          <span>
+            <span class="block text-sm font-bold">Trésorerie</span>
+            <span class="block text-xs text-muet">Caisse et banque</span>
           </span>
         </RouterLink>
         <RouterLink to="/sommaire" class="lien-rapide">

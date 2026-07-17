@@ -8,6 +8,7 @@ import Categories from '../vues/Categories.vue'
 import DepensesRecurrentes from '../vues/DepensesRecurrentes.vue'
 import ParametresFiscaux from '../vues/ParametresFiscaux.vue'
 import Connexion from '../vues/Connexion.vue'
+import Tresorerie from '../vues/Tresorerie.vue'
 import { estConnecte } from '../services/api'
 
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
   { path: '/revenus', name: 'revenus', component: Revenus },
   { path: '/depenses', name: 'depenses', component: Depenses },
   { path: '/kilometrage', name: 'kilometrage', component: Kilometrage },
+  { path: '/tresorerie', name: 'tresorerie', component: Tresorerie },
   { path: '/sommaire', name: 'sommaire', component: Sommaire },
   { path: '/categories', name: 'categories', component: Categories },
   { path: '/depenses-recurrentes', name: 'depenses-recurrentes', component: DepensesRecurrentes },

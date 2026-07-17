@@ -5,6 +5,7 @@ from app.database import SessionLocale
 from app.modeles import CategorieDepense, DepenseRecurrente, FrequenceDepenseRecurrente, ParametresFiscaux
 from app.services import auth_service
 from app.services.parametres_fiscaux_service import TAUX_DEFAUT
+from app.services.tresorerie_service import assurer_comptes_par_defaut
 
 CATEGORIES_SYSTEME = [
     "Essence/Énergie",
@@ -77,6 +78,7 @@ def executer_seed():
             )
 
         session.commit()
+        assurer_comptes_par_defaut(session)
     finally:
         session.close()
 

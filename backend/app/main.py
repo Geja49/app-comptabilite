@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import parametres
-from app.routeurs import auth, categories, depenses_recurrentes, parametres_fiscaux, periodes, rapports
+from app.routeurs import auth, categories, depenses_recurrentes, parametres_fiscaux, periodes, rapports, tresorerie
 from app.securite import MiddlewareAuthentification, MiddlewareEnTetesSecurite, MiddlewareLimiteCorps
 
 _docs = None if parametres.est_production else "/docs"
@@ -39,6 +39,7 @@ app.include_router(depenses_recurrentes.routeur)
 app.include_router(parametres_fiscaux.routeur)
 app.include_router(periodes.routeur)
 app.include_router(rapports.routeur)
+app.include_router(tresorerie.routeur)
 
 
 @app.get("/api/sante")
