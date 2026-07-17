@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import parametres
-from app.routeurs import categories, depenses_recurrentes, parametres_fiscaux, periodes, rapports
-from app.securite import MiddlewareCleApi, MiddlewareEnTetesSecurite, MiddlewareLimiteCorps
+from app.routeurs import auth, categories, depenses_recurrentes, parametres_fiscaux, periodes, rapports
+from app.securite import MiddlewareAuthentification, MiddlewareEnTetesSecurite, MiddlewareLimiteCorps
 
 _docs = None if parametres.est_production else "/docs"
 _redoc = None if parametres.est_production else "/redoc"
@@ -24,15 +24,16 @@ app = FastAPI(
 # Ordre : le dernier ajouté s'exécute en premier sur la requête entrante
 app.add_middleware(MiddlewareEnTetesSecurite)
 app.add_middleware(MiddlewareLimiteCorps)
-app.add_middleware(MiddlewareCleApi)
+app.add_middleware(MiddlewareAuthentification)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=parametres.liste_cors,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "X-API-Key", "Authorization"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
+app.include_router(auth.routeur)
 app.include_router(categories.routeur)
 app.include_router(depenses_recurrentes.routeur)
 app.include_router(parametres_fiscaux.routeur)
@@ -42,7 +43,7 @@ app.include_router(rapports.routeur)
 
 @app.get("/api/sante")
 def sante():
-    """Santé publique (sans clé API) pour les sondes de déploiement."""
+    """Santé publique (sans authentification) pour les sondes de déploiement."""
     return {"statut": "ok"}
 
 
@@ -56,7 +57,6 @@ if CHEMIN_STATIQUE.is_dir():
     @app.get("/{chemin_complet:path}")
     def servir_frontend(chemin_complet: str):
         if chemin_complet.startswith("api"):
-            from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="Introuvable")
         candidat = CHEMIN_STATIQUE / chemin_complet
         if chemin_complet and candidat.is_file():

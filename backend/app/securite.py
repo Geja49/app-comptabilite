@@ -1,35 +1,51 @@
-import secrets
-
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from app.config import parametres
+from app.services import auth_service
 
-CHEMINS_PUBLICS = {"/api/sante"}
+CHEMINS_PUBLICS = {
+    "/api/sante",
+    "/api/auth/connexion",
+    "/api/auth/inscription",
+    "/api/auth/statut",
+}
 
 
-class MiddlewareCleApi(BaseHTTPMiddleware):
+class MiddlewareAuthentification(BaseHTTPMiddleware):
+    """Protège les routes /api avec un jeton JWT Bearer."""
+
     async def dispatch(self, request: Request, call_next) -> Response:
         chemin = request.url.path.rstrip("/") or "/"
-        # Santé API + fichiers frontend (hors /api) restent publics
         if request.method == "OPTIONS" or chemin in CHEMINS_PUBLICS or not chemin.startswith("/api"):
             return await call_next(request)
 
-        attendu = parametres.api_cle
-        if not attendu:
+        try:
+            auth_service.secret_jwt()
+        except RuntimeError:
             return JSONResponse(
                 status_code=503,
-                content={"detail": "API_CLE non configurée sur le serveur"},
+                content={"detail": "JWT_SECRET non configuré sur le serveur"},
             )
 
-        fourni = request.headers.get("X-API-Key") or ""
-        if not fourni or not secrets.compare_digest(fourni, attendu):
+        en_tete = request.headers.get("Authorization") or ""
+        if not en_tete.startswith("Bearer "):
             return JSONResponse(
                 status_code=401,
-                content={"detail": "Clé API manquante ou invalide"},
-                headers={"WWW-Authenticate": "ApiKey"},
+                content={"detail": "Authentification requise"},
+                headers={"WWW-Authenticate": "Bearer"},
             )
+
+        charge = auth_service.decoder_jeton(en_tete[7:].strip())
+        if not charge or "sub" not in charge:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Session expirée ou invalide"},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        request.state.utilisateur_id = int(charge["sub"])
         return await call_next(request)
 
 

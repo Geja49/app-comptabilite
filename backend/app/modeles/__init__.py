@@ -5,6 +5,7 @@ from app.modeles.entree_kilometrage import EntreeKilometrage
 from app.modeles.parametres_fiscaux import MethodeTpsTvq, ParametresFiscaux
 from app.modeles.periode import Periode
 from app.modeles.revenu import Revenu
+from app.modeles.utilisateur import Utilisateur
 
 __all__ = [
     "Periode",
@@ -16,4 +17,5 @@ __all__ = [
     "EntreeKilometrage",
     "ParametresFiscaux",
     "MethodeTpsTvq",
+    "Utilisateur",
 ]

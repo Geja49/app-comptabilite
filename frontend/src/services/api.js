@@ -1,17 +1,28 @@
 import axios from 'axios'
 
-const CLE_STOCKAGE = 'comptataxi_api_cle'
+const JETON_STOCKAGE = 'comptataxi_jeton'
+const EMAIL_STOCKAGE = 'comptataxi_email'
 
-export function lireCleApi() {
-  return localStorage.getItem(CLE_STOCKAGE) || import.meta.env.VITE_API_CLE || ''
+export function lireJeton() {
+  return localStorage.getItem(JETON_STOCKAGE) || ''
 }
 
-export function enregistrerCleApi(cle) {
-  localStorage.setItem(CLE_STOCKAGE, cle.trim())
+export function lireEmailSession() {
+  return localStorage.getItem(EMAIL_STOCKAGE) || ''
 }
 
-export function effacerCleApi() {
-  localStorage.removeItem(CLE_STOCKAGE)
+export function enregistrerSession(jeton, email) {
+  localStorage.setItem(JETON_STOCKAGE, jeton)
+  localStorage.setItem(EMAIL_STOCKAGE, email || '')
+}
+
+export function effacerSession() {
+  localStorage.removeItem(JETON_STOCKAGE)
+  localStorage.removeItem(EMAIL_STOCKAGE)
+}
+
+export function estConnecte() {
+  return Boolean(lireJeton())
 }
 
 const api = axios.create({
@@ -20,9 +31,9 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const cle = lireCleApi()
-  if (cle) {
-    config.headers['X-API-Key'] = cle
+  const jeton = lireJeton()
+  if (jeton) {
+    config.headers.Authorization = `Bearer ${jeton}`
   }
   return config
 })
@@ -42,9 +53,9 @@ api.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
     if (erreur.response?.status === 401) {
+      effacerSession()
       abonnesNonAutorise.forEach((rappel) => rappel())
     }
-    // Le conflit 409 (modification d'un mois passé) est géré localement
     if (erreur.response?.status !== 409 && erreur.response?.status !== 401) {
       const message =
         erreur.response?.data?.detail ||
@@ -65,6 +76,29 @@ export async function telechargerExport(chemin, nomFichier) {
   lien.click()
   lien.remove()
   URL.revokeObjectURL(url)
+}
+
+export async function connecter(email, motDePasse) {
+  const { data } = await api.post('/api/auth/connexion', {
+    email,
+    mot_de_passe: motDePasse,
+  })
+  enregistrerSession(data.jeton, data.email)
+  return data
+}
+
+export async function inscrire(email, motDePasse) {
+  const { data } = await api.post('/api/auth/inscription', {
+    email,
+    mot_de_passe: motDePasse,
+  })
+  enregistrerSession(data.jeton, data.email)
+  return data
+}
+
+export async function obtenirStatutAuth() {
+  const { data } = await api.get('/api/auth/statut')
+  return data
 }
 
 export default api

@@ -79,17 +79,15 @@ function Demarrer {
     $env:DATABASE_URL = $UrlBaseDonnees
     $env:CORS_ORIGINS = $OriginesCors
     $env:ENVIRONNEMENT = "developpement"
-    if (-not $env:API_CLE) {
-        $env:API_CLE = "cle-locale-dev-a-changer"
+    if (-not $env:JWT_SECRET) {
+        $env:JWT_SECRET = "secret-local-dev-a-changer"
     }
-    $env:VITE_API_CLE = $env:API_CLE
     $env:VITE_API_URL = "http://localhost:8000"
 
     # Fichier env Vite pour le frontend
     $fichierEnvFrontend = Join-Path $DossierFrontend ".env.local"
     @"
 VITE_API_URL=http://localhost:8000
-VITE_API_CLE=$($env:API_CLE)
 "@ | Set-Content -Path $fichierEnvFrontend -Encoding UTF8
 
     # --- Backend ---

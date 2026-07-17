@@ -19,8 +19,10 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-comptabilite}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-comptabilite}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      API_CLE: ${API_CLE:?Definir API_CLE dans .env}
+      JWT_SECRET: ${JWT_SECRET:?Definir JWT_SECRET dans .env}
       ENVIRONNEMENT: ${ENVIRONNEMENT:-production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_MOT_DE_PASSE: ${ADMIN_MOT_DE_PASSE:-}
     ports:
       - "8000:8000"
     depends_on:
@@ -35,7 +37,6 @@ services:
       - "5173:5173"
     environment:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-      VITE_API_CLE: ${API_CLE:?Definir API_CLE dans .env}
     depends_on:
       - backend
     volumes:

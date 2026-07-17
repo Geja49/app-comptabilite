@@ -1,7 +1,9 @@
 from decimal import Decimal
 
+from app.config import parametres as config_app
 from app.database import SessionLocale
 from app.modeles import CategorieDepense, DepenseRecurrente, FrequenceDepenseRecurrente, ParametresFiscaux
+from app.services import auth_service
 from app.services.parametres_fiscaux_service import TAUX_DEFAUT
 
 CATEGORIES_SYSTEME = [
@@ -9,7 +11,7 @@ CATEGORIES_SYSTEME = [
     "Assurance commerciale",
     "Entretien véhicule",
     "Location véhicule",
-    "Nourriture",	
+    "Nourriture",
     "Téléphone",
     "Permis et licences",
     "Autre",
@@ -18,6 +20,7 @@ CATEGORIES_SYSTEME = [
 ANNEE_DEFAUT = 2026
 LOCATION_VEHICULE_JOURNALIERE = Decimal("110.00")
 ESSENCE_VEHICULE_JOURNALIERE = Decimal("35.00")
+
 
 def executer_seed():
     session = SessionLocale()
@@ -49,6 +52,18 @@ def executer_seed():
                     frequence=FrequenceDepenseRecurrente.PAR_JOUR_TRAVAIL,
                     actif=True,
                 )
+            )
+
+        # Compte admin initial (Render : ADMIN_EMAIL + ADMIN_MOT_DE_PASSE)
+        if (
+            config_app.admin_email
+            and config_app.admin_mot_de_passe
+            and auth_service.compter_utilisateurs(session) == 0
+        ):
+            auth_service.creer_utilisateur(
+                session,
+                config_app.admin_email,
+                config_app.admin_mot_de_passe,
             )
 
         session.commit()

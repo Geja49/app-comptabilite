@@ -30,7 +30,12 @@ def client():
 
     app.dependency_overrides[obtenir_session] = _session
     with TestClient(app) as test_client:
-        test_client.headers.update({"X-API-Key": "cle-test-pytest"})
+        inscription = test_client.post(
+            "/api/auth/inscription",
+            json={"email": "admin@example.com", "mot_de_passe": "MotDePasse123"},
+        )
+        assert inscription.status_code == 201
+        test_client.headers.update({"Authorization": f"Bearer {inscription.json()['jeton']}"})
         yield test_client
     app.dependency_overrides.clear()
 

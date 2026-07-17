@@ -12,9 +12,13 @@ services:
     envVars:
       - key: ENVIRONNEMENT
         value: production
-      - key: API_CLE
+      - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_MOT_DE_PASSE
         sync: false

@@ -1,10 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useComptabiliteStore } from './stores/comptabilite'
 import {
-  enregistrerCleApi,
-  lireCleApi,
+  effacerSession,
+  lireEmailSession,
   NOMS_MOIS,
   surErreurApi,
   surNonAutorise,
@@ -12,7 +12,10 @@ import {
 import SelecteurPeriode from './composants/SelecteurPeriode.vue'
 
 const route = useRoute()
+const router = useRouter()
 const store = useComptabiliteStore()
+
+const pagePublique = computed(() => route.meta.publique === true)
 
 const modeAnnuel = computed(() => ['sommaire', 'parametres-fiscaux'].includes(route.name))
 const titrePeriode = computed(() => `${NOMS_MOIS[store.mois - 1]} ${store.annee}`)
@@ -54,9 +57,8 @@ const enTeteComplement = computed(() => {
   return titrePeriode.value
 })
 
+const emailSession = computed(() => lireEmailSession())
 const erreur = ref('')
-const demandeCle = ref(false)
-const saisieCle = ref('')
 let minuterie = null
 surErreurApi((message) => {
   erreur.value = message
@@ -64,26 +66,21 @@ surErreurApi((message) => {
   minuterie = setTimeout(() => (erreur.value = ''), 6000)
 })
 surNonAutorise(() => {
-  demandeCle.value = true
-})
-
-onMounted(() => {
-  if (!lireCleApi()) {
-    demandeCle.value = true
+  if (route.name !== 'connexion') {
+    router.push({ name: 'connexion' })
   }
 })
 
-function validerCle() {
-  if (!saisieCle.value.trim()) return
-  enregistrerCleApi(saisieCle.value)
-  demandeCle.value = false
-  saisieCle.value = ''
-  window.location.reload()
+function deconnecter() {
+  effacerSession()
+  router.push({ name: 'connexion' })
 }
 </script>
 
 <template>
-  <div class="min-h-screen flex bg-fond">
+  <RouterView v-if="pagePublique" />
+
+  <div v-else class="min-h-screen flex bg-fond">
     <aside class="w-[272px] bg-barre border-r border-trait flex flex-col shrink-0">
       <div class="px-5 pt-6 pb-4">
         <div class="flex items-center gap-3">
@@ -186,6 +183,17 @@ function validerCle() {
           </div>
         </div>
       </nav>
+
+      <div class="px-4 py-4 border-t border-trait space-y-2">
+        <p v-if="emailSession" class="text-xs text-muet truncate px-1">{{ emailSession }}</p>
+        <button
+          type="button"
+          class="w-full text-sm font-semibold text-indigo-700 hover:bg-white/80 rounded-xl py-2"
+          @click="deconnecter"
+        >
+          Se déconnecter
+        </button>
+      </div>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0">
@@ -214,34 +222,6 @@ function validerCle() {
         <button class="text-white/80 hover:text-white" @click="erreur = ''">&times;</button>
       </div>
     </Transition>
-
-    <div
-      v-if="demandeCle"
-      class="fixed inset-0 z-[60] bg-encre/40 flex items-center justify-center p-4"
-    >
-      <form
-        class="bg-white rounded-2xl shadow-carte max-w-md w-full p-6 space-y-4"
-        @submit.prevent="validerCle"
-      >
-        <h2 class="text-lg font-extrabold text-encre">Clé d’accès</h2>
-        <p class="text-sm text-muet">
-          Entrez la clé API configurée sur le serveur (variable <code>API_CLE</code> dans Render).
-        </p>
-        <input
-          v-model="saisieCle"
-          type="password"
-          autocomplete="current-password"
-          class="w-full border border-trait rounded-xl px-3 py-2.5 text-sm"
-          placeholder="Votre clé API"
-        />
-        <button
-          type="submit"
-          class="w-full bg-indigo-600 text-white font-bold rounded-xl py-2.5 hover:bg-indigo-700 transition"
-        >
-          Continuer
-        </button>
-      </form>
-    </div>
   </div>
 </template>
 
