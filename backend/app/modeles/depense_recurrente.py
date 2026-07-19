@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.modeles.categorie_depense import CategorieDepense
+    from app.modeles.depense import Depense
 
 
 class FrequenceDepenseRecurrente(StrEnum):
@@ -26,9 +33,5 @@ class DepenseRecurrente(Base):
     )
     actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    categorie: Mapped["CategorieDepense"] = relationship(back_populates="depenses_recurrentes")
-    depenses_generees: Mapped[list["Depense"]] = relationship(back_populates="depense_recurrente")
-
-
-from app.modeles.categorie_depense import CategorieDepense  # noqa: E402
-from app.modeles.depense import Depense  # noqa: E402
+    categorie: Mapped[CategorieDepense] = relationship(back_populates="depenses_recurrentes")
+    depenses_generees: Mapped[list[Depense]] = relationship(back_populates="depense_recurrente")

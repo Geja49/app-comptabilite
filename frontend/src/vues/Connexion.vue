@@ -48,21 +48,22 @@ async function soumettre() {
 <template>
   <div class="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
     <div class="absolu-fond" aria-hidden="true">
+      <div class="grille" />
       <div class="route">
         <div class="ligne-centrale" />
         <div class="voiture-animee">
-          <svg viewBox="0 0 160 70" class="w-36 sm:w-44 drop-shadow-lg">
-            <ellipse cx="80" cy="58" rx="54" ry="5" fill="#0f172a" opacity="0.18" />
+          <svg viewBox="0 0 160 70" class="w-36 sm:w-44 drop-shadow-xl">
+            <ellipse cx="80" cy="58" rx="54" ry="5" fill="#0f172a" opacity="0.2" />
             <path
               d="M28 42 h18 l10-16 h48 l12 16 h16 a6 6 0 0 1 6 6 v8 H22 v-8 a6 6 0 0 1 6-6z"
-              fill="#4F46E5"
+              fill="#1D4ED8"
             />
-            <path d="M58 26 h36 l8 14 H50 z" fill="#C7D2FE" />
-            <rect x="24" y="38" width="14" height="5" rx="1.5" fill="#EEF2FF" opacity="0.9" />
+            <path d="M58 26 h36 l8 14 H50 z" fill="#BFDBFE" />
+            <rect x="24" y="38" width="14" height="5" rx="1.5" fill="#EFF6FF" opacity="0.95" />
             <rect x="122" y="38" width="12" height="5" rx="1.5" fill="#F59E0B" />
-            <circle cx="48" cy="56" r="9" fill="#1E1B4B" />
+            <circle cx="48" cy="56" r="9" fill="#0F172A" />
             <circle cx="48" cy="56" r="4" fill="#94A3B8" />
-            <circle cx="116" cy="56" r="9" fill="#1E1B4B" />
+            <circle cx="116" cy="56" r="9" fill="#0F172A" />
             <circle cx="116" cy="56" r="4" fill="#94A3B8" />
             <text x="78" y="44" text-anchor="middle" fill="white" font-size="9" font-weight="700">TAXI</text>
           </svg>
@@ -71,24 +72,24 @@ async function soumettre() {
     </div>
 
     <form
-      class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-carte border border-trait p-6 sm:p-8 space-y-5"
+      class="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md rounded-2xl shadow-carte border border-white/60 p-6 sm:p-8 space-y-5 animate-entree"
       @submit.prevent="soumettre"
     >
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-douce">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 17h8M6 9h12l-1 8H7L6 9zm3-4h6l1 4H8l1-4z" />
           </svg>
         </div>
         <div>
-          <h1 class="text-xl font-extrabold text-encre">ComptaTaxi</h1>
+          <h1 class="text-xl font-extrabold text-encre tracking-tight">ComptaTaxi</h1>
           <p class="text-sm text-muet">
-            {{ modeInscription ? 'Créer le compte administrateur' : 'Connexion' }}
+            {{ modeInscription ? 'Créer le compte administrateur' : 'Espace sécurisé' }}
           </p>
         </div>
       </div>
 
-      <p v-if="modeInscription" class="text-sm text-muet">
+      <p v-if="modeInscription" class="text-sm text-muet leading-relaxed">
         Premier démarrage : créez votre compte. L’inscription sera ensuite fermée.
       </p>
 
@@ -100,7 +101,7 @@ async function soumettre() {
           type="email"
           required
           autocomplete="username"
-          class="w-full border border-trait rounded-xl px-3 py-2.5 text-sm"
+          class="input"
           placeholder="vous@exemple.com"
         />
       </div>
@@ -114,16 +115,18 @@ async function soumettre() {
           required
           minlength="8"
           autocomplete="current-password"
-          class="w-full border border-trait rounded-xl px-3 py-2.5 text-sm"
+          class="input"
           placeholder="Au moins 8 caractères"
         />
       </div>
 
-      <p v-if="erreur" class="text-sm text-red-600">{{ erreur }}</p>
+      <p v-if="erreur" class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+        {{ erreur }}
+      </p>
 
       <button
         type="submit"
-        class="w-full bg-indigo-600 text-white font-bold rounded-xl py-2.5 hover:bg-indigo-700 disabled:opacity-60"
+        class="btn-primary w-full py-3"
         :disabled="chargement"
       >
         {{ chargement ? 'Patientez…' : modeInscription ? 'Créer mon compte' : 'Se connecter' }}
@@ -154,19 +157,30 @@ async function soumettre() {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.12), transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.10), transparent 35%),
-    linear-gradient(180deg, #F7F8FC 0%, #EEF1F8 55%, #E4E9F4 100%);
+    radial-gradient(circle at 18% 18%, rgba(29, 78, 216, 0.14), transparent 42%),
+    radial-gradient(circle at 85% 8%, rgba(15, 23, 42, 0.06), transparent 36%),
+    linear-gradient(165deg, #F8FAFC 0%, #EEF2F7 48%, #E2E8F0 100%);
+}
+
+.grille {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, black 0%, transparent 70%);
 }
 
 .route {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 12%;
-  height: 72px;
-  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  bottom: 11%;
+  height: 76px;
+  background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
   overflow: hidden;
+  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.12);
 }
 
 .ligne-centrale {
@@ -181,13 +195,17 @@ async function soumettre() {
     #f8fafc 0 28px,
     transparent 28px 52px
   );
-  animation: route-defile 1.2s linear infinite;
+  animation: route-defile 1.1s linear infinite;
 }
 
 .voiture-animee {
   position: absolute;
-  bottom: 10px;
-  animation: voiture-roule 7s ease-in-out infinite;
+  bottom: 12px;
+  animation: voiture-roule 8s ease-in-out infinite;
+}
+
+.animate-entree {
+  animation: entree-carte 0.55s ease-out both;
 }
 
 @keyframes route-defile {
@@ -196,20 +214,32 @@ async function soumettre() {
 }
 
 @keyframes voiture-roule {
-  0% { left: -20%; transform: translateY(0); }
-  40% { transform: translateY(-2px); }
-  50% { left: 78%; transform: translateY(0); }
-  60% { transform: translateY(-2px); }
-  100% { left: 110%; transform: translateY(0); }
+  0% { left: -22%; transform: translateY(0); }
+  45% { transform: translateY(-3px); }
+  50% { left: 72%; transform: translateY(0); }
+  55% { transform: translateY(-2px); }
+  100% { left: 112%; transform: translateY(0); }
+}
+
+@keyframes entree-carte {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ligne-centrale,
-  .voiture-animee {
+  .voiture-animee,
+  .animate-entree {
     animation: none;
   }
   .voiture-animee {
-    left: 40%;
+    left: 38%;
   }
 }
 </style>

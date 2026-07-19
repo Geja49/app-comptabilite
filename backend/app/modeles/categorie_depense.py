@@ -1,7 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.modeles.depense import Depense
+    from app.modeles.depense_recurrente import DepenseRecurrente
 
 
 class CategorieDepense(Base):
@@ -11,9 +19,5 @@ class CategorieDepense(Base):
     nom: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     est_systeme: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    depenses: Mapped[list["Depense"]] = relationship(back_populates="categorie")
-    depenses_recurrentes: Mapped[list["DepenseRecurrente"]] = relationship(back_populates="categorie")
-
-
-from app.modeles.depense import Depense  # noqa: E402
-from app.modeles.depense_recurrente import DepenseRecurrente  # noqa: E402
+    depenses: Mapped[list[Depense]] = relationship(back_populates="categorie")
+    depenses_recurrentes: Mapped[list[DepenseRecurrente]] = relationship(back_populates="categorie")

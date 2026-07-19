@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.modeles.categorie_depense import CategorieDepense
+    from app.modeles.depense_recurrente import DepenseRecurrente
+    from app.modeles.periode import Periode
 
 
 class Depense(Base):
@@ -22,11 +30,6 @@ class Depense(Base):
         ForeignKey("depenses_recurrentes.id", ondelete="SET NULL"), nullable=True
     )
 
-    periode: Mapped["Periode"] = relationship(back_populates="depenses")
-    categorie: Mapped["CategorieDepense"] = relationship(back_populates="depenses")
-    depense_recurrente: Mapped["DepenseRecurrente | None"] = relationship(back_populates="depenses_generees")
-
-
-from app.modeles.periode import Periode  # noqa: E402
-from app.modeles.categorie_depense import CategorieDepense  # noqa: E402
-from app.modeles.depense_recurrente import DepenseRecurrente  # noqa: E402
+    periode: Mapped[Periode] = relationship(back_populates="depenses")
+    categorie: Mapped[CategorieDepense] = relationship(back_populates="depenses")
+    depense_recurrente: Mapped[DepenseRecurrente | None] = relationship(back_populates="depenses_generees")

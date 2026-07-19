@@ -97,12 +97,12 @@ function deconnecter() {
     />
 
     <aside
-      class="fixed lg:static inset-y-0 left-0 z-50 w-[min(100%,288px)] bg-barre border-r border-trait flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0"
+      class="fixed lg:static inset-y-0 left-0 z-50 w-[min(100%,288px)] bg-white/95 backdrop-blur-md border-r border-trait flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 shadow-douce lg:shadow-none"
       :class="menuOuvert ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
     >
       <div class="px-5 pt-6 pb-4 flex items-start justify-between gap-2">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-douce">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-douce">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 17h8M6 9h12l-1 8H7L6 9zm3-4h6l1 4H8l1-4z" />
             </svg>

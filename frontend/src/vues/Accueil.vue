@@ -56,7 +56,7 @@ const seriesVentesDepenses = computed(() => {
 const seriesBenefice = computed(() => {
   const points = tableau.value?.serie_mensuelle || []
   return [
-    { nom: 'Bénéfice', couleur: '#4F46E5', valeurs: points.map((p) => Number(p.benefice) || 0) },
+    { nom: 'Bénéfice', couleur: '#1D4ED8', valeurs: points.map((p) => Number(p.benefice) || 0) },
   ]
 })
 
