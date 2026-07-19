@@ -10,7 +10,7 @@
 
 @layer components {
   .card {
-    @apply bg-surface rounded-carte shadow-carte border border-trait p-6;
+    @apply bg-surface rounded-carte shadow-carte border border-trait p-4 sm:p-6;
   }
 
   .btn-primary {
@@ -34,7 +34,7 @@
   }
 
   .table-base {
-    @apply w-full text-sm;
+    @apply w-full text-sm min-w-[640px];
   }
 
   .table-base th {
@@ -47,7 +47,7 @@
   }
 
   .titre-page {
-    @apply text-2xl md:text-3xl font-extrabold text-indigo-600 tracking-tight;
+    @apply text-xl sm:text-2xl md:text-3xl font-extrabold text-indigo-600 tracking-tight;
   }
 
   .sous-titre-page {

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useComptabiliteStore } from './stores/comptabilite'
 import {
@@ -14,6 +14,7 @@ import SelecteurPeriode from './composants/SelecteurPeriode.vue'
 const route = useRoute()
 const router = useRouter()
 const store = useComptabiliteStore()
+const menuOuvert = ref(false)
 
 const pagePublique = computed(() => route.meta.publique === true)
 
@@ -73,8 +74,13 @@ surNonAutorise(() => {
   }
 })
 
+watch(() => route.fullPath, () => {
+  menuOuvert.value = false
+})
+
 function deconnecter() {
   effacerSession()
+  menuOuvert.value = false
   router.push({ name: 'connexion' })
 }
 </script>
@@ -83,8 +89,18 @@ function deconnecter() {
   <RouterView v-if="pagePublique" />
 
   <div v-else class="min-h-screen flex bg-fond">
-    <aside class="w-[272px] bg-barre border-r border-trait flex flex-col shrink-0">
-      <div class="px-5 pt-6 pb-4">
+    <!-- Overlay mobile -->
+    <div
+      v-if="menuOuvert"
+      class="fixed inset-0 bg-encre/40 z-40 lg:hidden"
+      @click="menuOuvert = false"
+    />
+
+    <aside
+      class="fixed lg:static inset-y-0 left-0 z-50 w-[min(100%,288px)] bg-barre border-r border-trait flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0"
+      :class="menuOuvert ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    >
+      <div class="px-5 pt-6 pb-4 flex items-start justify-between gap-2">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-douce">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -96,6 +112,14 @@ function deconnecter() {
             <p class="text-xs text-muet">Transport de personnes</p>
           </div>
         </div>
+        <button
+          type="button"
+          class="lg:hidden text-muet text-2xl leading-none px-2"
+          aria-label="Fermer le menu"
+          @click="menuOuvert = false"
+        >
+          &times;
+        </button>
       </div>
 
       <nav class="flex-1 px-3 pb-6 space-y-1 overflow-y-auto">
@@ -198,19 +222,31 @@ function deconnecter() {
       </div>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0">
-      <header class="px-8 pt-7 pb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 class="titre-page">{{ page.titre }}</h1>
-          <p class="sous-titre-page">
-            {{ page.sousTitre }}
-            <span v-if="enTeteComplement" class="text-encre font-medium"> · {{ enTeteComplement }}</span>
-          </p>
+    <main class="flex-1 flex flex-col min-w-0 w-full">
+      <header class="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-7 pb-4 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+        <div class="flex items-start gap-3 min-w-0">
+          <button
+            type="button"
+            class="lg:hidden mt-1 w-10 h-10 rounded-xl border border-trait bg-surface flex items-center justify-center shrink-0"
+            aria-label="Ouvrir le menu"
+            @click="menuOuvert = true"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <div class="min-w-0">
+            <h1 class="titre-page truncate">{{ page.titre }}</h1>
+            <p class="sous-titre-page">
+              {{ page.sousTitre }}
+              <span v-if="enTeteComplement" class="text-encre font-medium"> · {{ enTeteComplement }}</span>
+            </p>
+          </div>
         </div>
         <SelecteurPeriode :mode-annuel="modeAnnuel" />
       </header>
 
-      <div class="flex-1 px-8 pb-10 overflow-auto">
+      <div class="flex-1 px-4 sm:px-6 lg:px-8 pb-10 overflow-auto">
         <RouterView />
       </div>
     </main>
@@ -218,7 +254,7 @@ function deconnecter() {
     <Transition name="glisser">
       <div
         v-if="erreur"
-        class="fixed bottom-6 right-6 max-w-sm bg-red-600 text-white px-4 py-3 rounded-bouton shadow-carte flex items-start gap-3 z-50"
+        class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm bg-red-600 text-white px-4 py-3 rounded-bouton shadow-carte flex items-start gap-3 z-50"
       >
         <span class="text-sm flex-1">{{ erreur }}</span>
         <button class="text-white/80 hover:text-white" @click="erreur = ''">&times;</button>

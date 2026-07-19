@@ -46,9 +46,32 @@ async function soumettre() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-fond flex items-center justify-center p-4">
+  <div class="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
+    <div class="absolu-fond" aria-hidden="true">
+      <div class="route">
+        <div class="ligne-centrale" />
+        <div class="voiture-animee">
+          <svg viewBox="0 0 160 70" class="w-36 sm:w-44 drop-shadow-lg">
+            <ellipse cx="80" cy="58" rx="54" ry="5" fill="#0f172a" opacity="0.18" />
+            <path
+              d="M28 42 h18 l10-16 h48 l12 16 h16 a6 6 0 0 1 6 6 v8 H22 v-8 a6 6 0 0 1 6-6z"
+              fill="#4F46E5"
+            />
+            <path d="M58 26 h36 l8 14 H50 z" fill="#C7D2FE" />
+            <rect x="24" y="38" width="14" height="5" rx="1.5" fill="#EEF2FF" opacity="0.9" />
+            <rect x="122" y="38" width="12" height="5" rx="1.5" fill="#F59E0B" />
+            <circle cx="48" cy="56" r="9" fill="#1E1B4B" />
+            <circle cx="48" cy="56" r="4" fill="#94A3B8" />
+            <circle cx="116" cy="56" r="9" fill="#1E1B4B" />
+            <circle cx="116" cy="56" r="4" fill="#94A3B8" />
+            <text x="78" y="44" text-anchor="middle" fill="white" font-size="9" font-weight="700">TAXI</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <form
-      class="w-full max-w-md bg-white rounded-2xl shadow-carte border border-trait p-8 space-y-5"
+      class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-carte border border-trait p-6 sm:p-8 space-y-5"
       @submit.prevent="soumettre"
     >
       <div class="flex items-center gap-3">
@@ -125,3 +148,68 @@ async function soumettre() {
     </form>
   </div>
 </template>
+
+<style scoped>
+.absolu-fond {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.10), transparent 35%),
+    linear-gradient(180deg, #F7F8FC 0%, #EEF1F8 55%, #E4E9F4 100%);
+}
+
+.route {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12%;
+  height: 72px;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  overflow: hidden;
+}
+
+.ligne-centrale {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 200%;
+  height: 4px;
+  margin-top: -2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #f8fafc 0 28px,
+    transparent 28px 52px
+  );
+  animation: route-defile 1.2s linear infinite;
+}
+
+.voiture-animee {
+  position: absolute;
+  bottom: 10px;
+  animation: voiture-roule 7s ease-in-out infinite;
+}
+
+@keyframes route-defile {
+  from { transform: translateX(0); }
+  to { transform: translateX(-52px); }
+}
+
+@keyframes voiture-roule {
+  0% { left: -20%; transform: translateY(0); }
+  40% { transform: translateY(-2px); }
+  50% { left: 78%; transform: translateY(0); }
+  60% { transform: translateY(-2px); }
+  100% { left: 110%; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ligne-centrale,
+  .voiture-animee {
+    animation: none;
+  }
+  .voiture-animee {
+    left: 40%;
+  }
+}
+</style>

@@ -9,6 +9,7 @@ import api, {
   telechargerExport,
 } from '../services/api'
 import DiagrammeBarres from '../composants/DiagrammeBarres.vue'
+import DiagrammeLignes from '../composants/DiagrammeLignes.vue'
 
 const store = useComptabiliteStore()
 const tableau = ref(null)
@@ -58,6 +59,11 @@ const seriesBenefice = computed(() => {
     { nom: 'Bénéfice', couleur: '#4F46E5', valeurs: points.map((p) => Number(p.benefice) || 0) },
   ]
 })
+
+const seriesCourbes = computed(() => [
+  ...seriesVentesDepenses.value,
+  ...seriesBenefice.value,
+])
 
 const ratiosProductivite = computed(() => {
   const p = tableau.value?.productivite
@@ -109,7 +115,7 @@ onMounted(charger)
   <div v-if="chargement" class="text-muet">Chargement...</div>
   <div v-else class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <span class="badge bg-indigo-50 text-indigo-700">{{ libellePeriode }}</span>
         <RouterLink
           to="/parametres-fiscaux"
@@ -119,23 +125,52 @@ onMounted(charger)
           {{ libelleMethode }}
         </RouterLink>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <button class="btn-secondary" @click="exporterExcel">Exporter Excel</button>
-        <button class="btn-primary" @click="exporterPdf">Exporter PDF</button>
+      <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+        <button class="btn-secondary flex-1 sm:flex-none" @click="exporterExcel">Exporter Excel</button>
+        <button class="btn-primary flex-1 sm:flex-none" @click="exporterPdf">Exporter PDF</button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
       <div
         v-for="item in indicateurs"
         :key="item.label"
-        class="card bg-gradient-to-b p-5"
+        class="card bg-gradient-to-b p-4 sm:p-5"
         :class="item.fond"
       >
         <p class="text-xs font-semibold uppercase tracking-wide text-muet">{{ item.label }}</p>
-        <p class="text-2xl font-extrabold mt-2" :class="item.teinte">{{ formaterMontant(item.valeur) }}</p>
+        <p class="text-xl sm:text-2xl font-extrabold mt-2" :class="item.teinte">{{ formaterMontant(item.valeur) }}</p>
       </div>
     </div>
+
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-lg font-extrabold text-encre">Graphiques comptables</h2>
+        <p class="text-sm text-muet">Mises à jour automatiques selon vos saisies de l’année.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-4">
+        <DiagrammeLignes
+          titre="Courbes ventes, dépenses et bénéfice"
+          sous-titre="Vision continue sur 12 mois"
+          :etiquettes="etiquettesMois"
+          :series="seriesCourbes"
+        />
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DiagrammeBarres
+          titre="Ventes et dépenses"
+          sous-titre="Comparaison mensuelle"
+          :etiquettes="etiquettesMois"
+          :series="seriesVentesDepenses"
+        />
+        <DiagrammeBarres
+          titre="Bénéfice"
+          sous-titre="Ventes − dépenses par mois"
+          :etiquettes="etiquettesMois"
+          :series="seriesBenefice"
+        />
+      </div>
+    </section>
 
     <div v-if="tableau.alertes.length" class="card border-amber-200 bg-amber-50/80">
       <h3 class="font-bold text-amber-900 mb-2">Alertes</h3>
@@ -145,21 +180,6 @@ onMounted(charger)
           <span>{{ alerte.message }}</span>
         </li>
       </ul>
-    </div>
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <DiagrammeBarres
-        titre="Ventes et dépenses"
-        sous-titre="Évolution mensuelle automatique de l’année sélectionnée"
-        :etiquettes="etiquettesMois"
-        :series="seriesVentesDepenses"
-      />
-      <DiagrammeBarres
-        titre="Bénéfice"
-        sous-titre="Ventes − dépenses par mois"
-        :etiquettes="etiquettesMois"
-        :series="seriesBenefice"
-      />
     </div>
 
     <div class="card">
