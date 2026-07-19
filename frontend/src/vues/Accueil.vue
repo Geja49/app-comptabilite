@@ -1,7 +1,16 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import api, { formaterMontant, LIBELLES_METHODE, NOMS_MOIS, telechargerExport } from '../services/api'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useComptabiliteStore } from '../stores/comptabilite'
+import api, {
+  formaterMontant,
+  formaterPourcentage,
+  LIBELLES_METHODE,
+  NOMS_MOIS,
+  telechargerExport,
+} from '../services/api'
+import DiagrammeBarres from '../composants/DiagrammeBarres.vue'
 
+const store = useComptabiliteStore()
 const tableau = ref(null)
 const chargement = ref(true)
 
@@ -18,19 +27,59 @@ const libellePeriode = computed(() => {
 const indicateurs = computed(() => {
   if (!tableau.value) return []
   const s = tableau.value.sommaire
+  const p = tableau.value.productivite
   return [
     { label: 'Revenu brut', valeur: s.revenu_brut, teinte: 'text-emerald-700', fond: 'from-emerald-50 to-white' },
     { label: 'Dépenses totales', valeur: s.depenses_totales, teinte: 'text-rose-600', fond: 'from-rose-50 to-white' },
-    { label: 'TPS à remettre', valeur: s.tps_a_remettre, teinte: 'text-indigo-700', fond: 'from-indigo-50 to-white' },
-    { label: 'TVQ à remettre', valeur: s.tvq_a_remettre, teinte: 'text-indigo-700', fond: 'from-indigo-50 to-white' },
-    { label: 'Redevance', valeur: s.redevance_totale, teinte: 'text-amber-700', fond: 'from-amber-50 to-white' },
+    {
+      label: 'Bénéfice',
+      valeur: p?.benefice ?? Number(s.revenu_brut) - Number(s.depenses_totales),
+      teinte: 'text-indigo-700',
+      fond: 'from-indigo-50 to-white',
+    },
+    { label: 'TPS à remettre', valeur: s.tps_a_remettre, teinte: 'text-violet-700', fond: 'from-violet-50 to-white' },
+    { label: 'TVQ à remettre', valeur: s.tvq_a_remettre, teinte: 'text-violet-700', fond: 'from-violet-50 to-white' },
+  ]
+})
+
+const etiquettesMois = computed(() => (tableau.value?.serie_mensuelle || []).map((p) => p.mois_nom))
+
+const seriesVentesDepenses = computed(() => {
+  const points = tableau.value?.serie_mensuelle || []
+  return [
+    { nom: 'Ventes', couleur: '#059669', valeurs: points.map((p) => Number(p.ventes) || 0) },
+    { nom: 'Dépenses', couleur: '#E11D48', valeurs: points.map((p) => Number(p.depenses) || 0) },
+  ]
+})
+
+const seriesBenefice = computed(() => {
+  const points = tableau.value?.serie_mensuelle || []
+  return [
+    { nom: 'Bénéfice', couleur: '#4F46E5', valeurs: points.map((p) => Number(p.benefice) || 0) },
+  ]
+})
+
+const ratiosProductivite = computed(() => {
+  const p = tableau.value?.productivite
+  if (!p) return []
+  return [
+    { label: 'Jours travaillés', valeur: `${p.jours_travailles} j` },
+    { label: 'Heures (12 h/j)', valeur: `${Number(p.heures_totales).toFixed(0)} h` },
+    { label: 'Revenu / heure', valeur: formaterMontant(p.revenu_par_heure) },
+    { label: 'Revenu / jour', valeur: formaterMontant(p.revenu_par_jour) },
+    { label: 'Bénéfice / heure', valeur: formaterMontant(p.benefice_par_heure) },
+    { label: 'Courses / heure', valeur: Number(p.courses_par_heure).toFixed(2) },
+    { label: 'Ratio dépenses', valeur: formaterPourcentage(p.ratio_depenses) },
+    { label: 'Marge bénéfice', valeur: formaterPourcentage(p.marge_benefice) },
   ]
 })
 
 async function charger() {
   chargement.value = true
   try {
-    const { data } = await api.get('/api/tableau-de-bord')
+    const { data } = await api.get('/api/tableau-de-bord', {
+      params: { annee: store.annee, mois: store.mois },
+    })
     tableau.value = data
   } finally {
     chargement.value = false
@@ -52,6 +101,7 @@ async function exporterPdf() {
   await telechargerExport(`/api/export/pdf/${annee}`, `rapport_comptable_${annee}.pdf`)
 }
 
+watch(() => [store.annee, store.mois], charger)
 onMounted(charger)
 </script>
 
@@ -95,6 +145,40 @@ onMounted(charger)
           <span>{{ alerte.message }}</span>
         </li>
       </ul>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <DiagrammeBarres
+        titre="Ventes et dépenses"
+        sous-titre="Évolution mensuelle automatique de l’année sélectionnée"
+        :etiquettes="etiquettesMois"
+        :series="seriesVentesDepenses"
+      />
+      <DiagrammeBarres
+        titre="Bénéfice"
+        sous-titre="Ventes − dépenses par mois"
+        :etiquettes="etiquettesMois"
+        :series="seriesBenefice"
+      />
+    </div>
+
+    <div class="card">
+      <div class="mb-4">
+        <h3 class="font-bold text-encre">Productivité ({{ tableau.productivite?.heures_par_jour || 12 }} h / jour)</h3>
+        <p class="text-sm text-muet">
+          Ratios calculés sur les jours avec revenu saisi pour {{ libellePeriode }}.
+        </p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div
+          v-for="ratio in ratiosProductivite"
+          :key="ratio.label"
+          class="rounded-xl border border-trait bg-barre px-4 py-3"
+        >
+          <p class="text-xs font-semibold uppercase tracking-wide text-muet">{{ ratio.label }}</p>
+          <p class="text-lg font-extrabold text-encre mt-1">{{ ratio.valeur }}</p>
+        </div>
+      </div>
     </div>
 
     <div class="card">

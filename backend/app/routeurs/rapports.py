@@ -10,10 +10,13 @@ from app.modeles import DepenseRecurrente, MethodeTpsTvq
 from app.schemas import (
     AlerteReponse,
     PeriodeReponse,
+    PointSerieMensuelle,
+    ProductiviteReponse,
     SommaireAnnuelReponse,
     SommaireMensuelReponse,
     TableauDeBordReponse,
 )
+from app.services.calculs import arrondir
 from app.services.export_excel import NOMS_MOIS, exporter_mois_excel
 from app.services.export_pdf import exporter_annee_pdf
 from app.services.impots import appliquer_rabais_annuel_rapide
@@ -21,6 +24,40 @@ from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_
 from app.services.periode_service import est_periode_passee, obtenir_donnees_periode
 
 routeur = APIRouter(tags=["rapports"])
+
+HEURES_TRAVAIL_PAR_JOUR = Decimal("12")
+
+
+def _productivite_depuis_donnees(donnees: dict, heures_par_jour: Decimal = HEURES_TRAVAIL_PAR_JOUR) -> ProductiviteReponse:
+    revenus = donnees["revenus"]
+    jours = len({r["date"] for r in revenus})
+    courses = sum(int(r.get("nombre_courses") or 0) for r in revenus)
+    ventes = arrondir(Decimal(str(donnees["sommaire"]["revenu_brut"])))
+    depenses = arrondir(Decimal(str(donnees["sommaire"]["depenses_totales"])))
+    benefice = arrondir(ventes - depenses)
+    heures = arrondir(Decimal(jours) * heures_par_jour)
+    zero = Decimal("0")
+
+    def ratio(numerateur: Decimal, denominateur: Decimal) -> Decimal:
+        if denominateur == 0:
+            return zero
+        return arrondir(numerateur / denominateur)
+
+    return ProductiviteReponse(
+        heures_par_jour=heures_par_jour,
+        jours_travailles=jours,
+        heures_totales=heures,
+        courses=courses,
+        ventes=ventes,
+        depenses=depenses,
+        benefice=benefice,
+        revenu_par_heure=ratio(ventes, heures),
+        revenu_par_jour=ratio(ventes, Decimal(jours)),
+        benefice_par_heure=ratio(benefice, heures),
+        courses_par_heure=ratio(Decimal(courses), heures),
+        ratio_depenses=ratio(depenses, ventes),
+        marge_benefice=ratio(benefice, ventes),
+    )
 
 
 def _sommaire_mensuel(mois: int, donnees: dict) -> SommaireMensuelReponse:
@@ -111,10 +148,19 @@ def sommaire_annuel(annee: int, session: Session = Depends(obtenir_session)):
 
 
 @routeur.get("/api/tableau-de-bord", response_model=TableauDeBordReponse)
-def tableau_de_bord(session: Session = Depends(obtenir_session)):
+def tableau_de_bord(
+    annee: int | None = None,
+    mois: int | None = None,
+    session: Session = Depends(obtenir_session),
+):
     aujourd_hui = date.today()
-    donnees = obtenir_donnees_periode(session, aujourd_hui.year, aujourd_hui.month)
-    sommaire = _sommaire_mensuel(aujourd_hui.month, donnees)
+    annee_cible = annee or aujourd_hui.year
+    mois_affiche = mois or aujourd_hui.month
+    if mois_affiche < 1 or mois_affiche > 12:
+        mois_affiche = aujourd_hui.month
+
+    donnees = obtenir_donnees_periode(session, annee_cible, mois_affiche)
+    sommaire = _sommaire_mensuel(mois_affiche, donnees)
     alertes: list[AlerteReponse] = []
 
     if not donnees["revenus"]:
@@ -160,15 +206,36 @@ def tableau_de_bord(session: Session = Depends(obtenir_session)):
             message="Des dépenses récurrentes n'ont pas encore été générées pour ce mois",
         ))
 
+    serie_mensuelle: list[PointSerieMensuelle] = []
+    for mois in range(1, 13):
+        d_mois = obtenir_donnees_periode(session, annee_cible, mois)
+        ventes = arrondir(Decimal(str(d_mois["sommaire"]["revenu_brut"])))
+        depenses = arrondir(Decimal(str(d_mois["sommaire"]["depenses_totales"])))
+        jours = len({r["date"] for r in d_mois["revenus"]})
+        courses = sum(int(r.get("nombre_courses") or 0) for r in d_mois["revenus"])
+        serie_mensuelle.append(
+            PointSerieMensuelle(
+                mois=mois,
+                mois_nom=NOMS_MOIS[mois - 1][:3],
+                ventes=ventes,
+                depenses=depenses,
+                benefice=arrondir(ventes - depenses),
+                jours_travailles=jours,
+                courses=courses,
+            )
+        )
+
     return TableauDeBordReponse(
         periode=PeriodeReponse(
             id=donnees["periode"]["id"],
-            annee=aujourd_hui.year,
-            mois=aujourd_hui.month,
-            est_passee=est_periode_passee(aujourd_hui.year, aujourd_hui.month),
+            annee=annee_cible,
+            mois=mois_affiche,
+            est_passee=est_periode_passee(annee_cible, mois_affiche),
         ),
         sommaire=sommaire,
         alertes=alertes,
+        serie_mensuelle=serie_mensuelle,
+        productivite=_productivite_depuis_donnees(donnees),
     )
 
 

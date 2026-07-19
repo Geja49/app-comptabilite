@@ -170,7 +170,35 @@ class AlerteReponse(BaseModel):
     message: str
 
 
+class PointSerieMensuelle(BaseModel):
+    mois: int
+    mois_nom: str
+    ventes: Decimal
+    depenses: Decimal
+    benefice: Decimal
+    jours_travailles: int = 0
+    courses: int = 0
+
+
+class ProductiviteReponse(BaseModel):
+    heures_par_jour: Decimal
+    jours_travailles: int
+    heures_totales: Decimal
+    courses: int
+    ventes: Decimal
+    depenses: Decimal
+    benefice: Decimal
+    revenu_par_heure: Decimal
+    revenu_par_jour: Decimal
+    benefice_par_heure: Decimal
+    courses_par_heure: Decimal
+    ratio_depenses: Decimal
+    marge_benefice: Decimal
+
+
 class TableauDeBordReponse(BaseModel):
     periode: PeriodeReponse
     sommaire: SommaireMensuelReponse
     alertes: list[AlerteReponse]
+    serie_mensuelle: list[PointSerieMensuelle] = []
+    productivite: ProductiviteReponse | None = None
