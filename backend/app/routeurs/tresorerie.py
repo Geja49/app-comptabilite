@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
+from app.dependances import obtenir_utilisateur_id
 from app.pagination import params_pagination
 from app.services import tresorerie_service
 
@@ -65,23 +66,28 @@ class CompteTresorerieUpdateOuverture(BaseModel):
 
 
 @routeur.get("/resume", response_model=ResumeTresorerieReponse)
-def obtenir_resume(session: Session = Depends(obtenir_session)):
-    tresorerie_service.assurer_comptes_par_defaut(session)
-    return tresorerie_service.resume_tresorerie(session)
+def obtenir_resume(
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    tresorerie_service.assurer_comptes_par_defaut(session, utilisateur_id)
+    return tresorerie_service.resume_tresorerie(session, utilisateur_id)
 
 
 @routeur.get("/operations", response_model=list[OperationTresorerieReponse])
 def lister_operations(
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
     pagination: tuple[int, int] = Depends(params_pagination),
     compte_id: int | None = None,
     date_debut: date | None = None,
     date_fin: date | None = None,
 ):
-    tresorerie_service.assurer_comptes_par_defaut(session)
+    tresorerie_service.assurer_comptes_par_defaut(session, utilisateur_id)
     decalage, limite = pagination
     return tresorerie_service.lister_operations(
         session,
+        utilisateur_id,
         compte_id=compte_id,
         date_debut=date_debut,
         date_fin=date_fin,
@@ -91,10 +97,15 @@ def lister_operations(
 
 
 @routeur.post("/operations", response_model=list[OperationTresorerieReponse], status_code=201)
-def creer_operation(donnees: OperationTresorerieCreate, session: Session = Depends(obtenir_session)):
-    tresorerie_service.assurer_comptes_par_defaut(session)
+def creer_operation(
+    donnees: OperationTresorerieCreate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    tresorerie_service.assurer_comptes_par_defaut(session, utilisateur_id)
     return tresorerie_service.creer_operation(
         session,
+        utilisateur_id,
         date_operation=donnees.date_operation,
         type_operation=donnees.type_operation,
         compte_id=donnees.compte_id,
@@ -109,8 +120,12 @@ def creer_operation(donnees: OperationTresorerieCreate, session: Session = Depen
 
 
 @routeur.delete("/operations/{operation_id}", status_code=204)
-def supprimer_operation(operation_id: int, session: Session = Depends(obtenir_session)):
-    tresorerie_service.supprimer_operation(session, operation_id)
+def supprimer_operation(
+    operation_id: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    tresorerie_service.supprimer_operation(session, operation_id, utilisateur_id)
 
 
 @routeur.put("/comptes/{compte_id}/solde-ouverture", response_model=CompteTresorerieReponse)
@@ -118,8 +133,9 @@ def modifier_solde_ouverture(
     compte_id: int,
     donnees: CompteTresorerieUpdateOuverture,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
-    compte = tresorerie_service._exiger_compte(session, compte_id)
+    compte = tresorerie_service._exiger_compte(session, compte_id, utilisateur_id)
     compte.solde_ouverture = donnees.solde_ouverture
     session.commit()
     solde = tresorerie_service.calculer_solde(session, compte)

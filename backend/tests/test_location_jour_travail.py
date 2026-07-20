@@ -1,7 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
-from app.modeles import Depense, DepenseRecurrente, FrequenceDepenseRecurrente, Periode, Revenu
+from app.modeles import Depense, DepenseRecurrente, FrequenceDepenseRecurrente, Periode, Revenu, Utilisateur
 from app.services.periode_service import generer_depenses_recurrentes
 
 
@@ -19,15 +19,20 @@ def test_location_par_jour_travail(client=None):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    categorie = CategorieDepense(nom="Location véhicule", est_systeme=True)
+    utilisateur = Utilisateur(email="test@example.com", mot_de_passe_hash="x", actif=True)
+    session.add(utilisateur)
+    session.flush()
+
+    categorie = CategorieDepense(utilisateur_id=utilisateur.id, nom="Location véhicule", est_systeme=True)
     session.add(categorie)
     session.flush()
 
-    periode = Periode(annee=2026, mois=7)
+    periode = Periode(utilisateur_id=utilisateur.id, annee=2026, mois=7)
     session.add(periode)
     session.flush()
 
     recurrente = DepenseRecurrente(
+        utilisateur_id=utilisateur.id,
         fournisseur="Location véhicule",
         categorie_id=categorie.id,
         montant=Decimal("110.00"),

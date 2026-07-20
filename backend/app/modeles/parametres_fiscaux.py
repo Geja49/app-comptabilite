@@ -1,7 +1,7 @@
 from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import Integer, Numeric, String
+from sqlalchemy import ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -15,6 +15,9 @@ class MethodeTpsTvq(StrEnum):
 class ParametresFiscaux(Base):
     __tablename__ = "parametres_fiscaux"
 
+    utilisateur_id: Mapped[int] = mapped_column(
+        ForeignKey("utilisateurs.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
     annee: Mapped[int] = mapped_column(Integer, primary_key=True)
     methode_tps_tvq: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MethodeTpsTvq.REGULIERE.value

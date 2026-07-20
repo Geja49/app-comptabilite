@@ -39,10 +39,10 @@ def calculer_solde(session: Session, compte: CompteTresorerie) -> Decimal:
     return arrondir(solde + Decimal(str(total)))
 
 
-def lister_comptes_avec_soldes(session: Session) -> list[dict]:
+def lister_comptes_avec_soldes(session: Session, utilisateur_id: int) -> list[dict]:
     comptes = (
         session.query(CompteTresorerie)
-        .filter_by(actif=True)
+        .filter_by(actif=True, utilisateur_id=utilisateur_id)
         .order_by(CompteTresorerie.type_compte, CompteTresorerie.nom)
         .limit(LIMITE_MAX)
         .all()
@@ -65,8 +65,8 @@ def lister_comptes_avec_soldes(session: Session) -> list[dict]:
     return resultats
 
 
-def resume_tresorerie(session: Session) -> dict:
-    comptes = lister_comptes_avec_soldes(session)
+def resume_tresorerie(session: Session, utilisateur_id: int) -> dict:
+    comptes = lister_comptes_avec_soldes(session, utilisateur_id)
     caisse = arrondir(sum((c["solde_actuel"] for c in comptes if c["type_compte"] == "caisse"), Decimal("0")))
     banque = arrondir(sum((c["solde_actuel"] for c in comptes if c["type_compte"] == "banque"), Decimal("0")))
     return {
@@ -77,9 +77,9 @@ def resume_tresorerie(session: Session) -> dict:
     }
 
 
-def _exiger_compte(session: Session, compte_id: int) -> CompteTresorerie:
+def _exiger_compte(session: Session, compte_id: int, utilisateur_id: int) -> CompteTresorerie:
     compte = session.get(CompteTresorerie, compte_id)
-    if not compte or not compte.actif:
+    if not compte or not compte.actif or compte.utilisateur_id != utilisateur_id:
         raise HTTPException(status_code=404, detail="Compte de trésorerie introuvable")
     return compte
 
@@ -104,6 +104,7 @@ def _vers_reponse(op: OperationTresorerie) -> dict:
 
 def lister_operations(
     session: Session,
+    utilisateur_id: int,
     *,
     compte_id: int | None = None,
     date_debut: date | None = None,
@@ -111,9 +112,14 @@ def lister_operations(
     decalage: int = 0,
     limite: int = 100,
 ) -> list[dict]:
-    requete = session.query(OperationTresorerie).order_by(
-        OperationTresorerie.date_operation.desc(),
-        OperationTresorerie.id.desc(),
+    requete = (
+        session.query(OperationTresorerie)
+        .join(CompteTresorerie, OperationTresorerie.compte_id == CompteTresorerie.id)
+        .filter(CompteTresorerie.utilisateur_id == utilisateur_id)
+        .order_by(
+            OperationTresorerie.date_operation.desc(),
+            OperationTresorerie.id.desc(),
+        )
     )
     if compte_id is not None:
         requete = requete.filter(OperationTresorerie.compte_id == compte_id)
@@ -127,6 +133,7 @@ def lister_operations(
 
 def creer_operation(
     session: Session,
+    utilisateur_id: int,
     *,
     date_operation: date,
     type_operation: str,
@@ -149,7 +156,7 @@ def creer_operation(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Type d'opération invalide") from exc
 
-    compte = _exiger_compte(session, compte_id)
+    compte = _exiger_compte(session, compte_id, utilisateur_id)
     creees: list[OperationTresorerie] = []
 
     if type_op == TypeOperationTresorerie.ENCAISSEMENT:
@@ -201,7 +208,7 @@ def creer_operation(
     }:
         if not compte_contrepartie_id:
             raise HTTPException(status_code=400, detail="Compte de contrepartie requis")
-        contrepartie = _exiger_compte(session, compte_contrepartie_id)
+        contrepartie = _exiger_compte(session, compte_contrepartie_id, utilisateur_id)
         if contrepartie.id == compte.id:
             raise HTTPException(status_code=400, detail="Les deux comptes doivent être distincts")
 
@@ -258,9 +265,9 @@ def creer_operation(
     return [_vers_reponse(op) for op in creees]
 
 
-def supprimer_operation(session: Session, operation_id: int) -> None:
+def supprimer_operation(session: Session, operation_id: int, utilisateur_id: int) -> None:
     operation = session.get(OperationTresorerie, operation_id)
-    if not operation:
+    if not operation or not operation.compte or operation.compte.utilisateur_id != utilisateur_id:
         raise HTTPException(status_code=404, detail="Opération introuvable")
 
     # Supprimer la paire liée (même date, type, montant, libelle, comptes croisés)
@@ -289,11 +296,23 @@ def supprimer_operation(session: Session, operation_id: int) -> None:
     session.commit()
 
 
-def assurer_comptes_par_defaut(session: Session) -> None:
-    if session.query(CompteTresorerie).limit(1).first():
+def assurer_comptes_par_defaut(session: Session, utilisateur_id: int) -> None:
+    if session.query(CompteTresorerie).filter_by(utilisateur_id=utilisateur_id).limit(1).first():
         return
-    session.add(CompteTresorerie(nom="Caisse", type_compte=TypeCompteTresorerie.CAISSE, solde_ouverture=Decimal("0")))
     session.add(
-        CompteTresorerie(nom="Banque principale", type_compte=TypeCompteTresorerie.BANQUE, solde_ouverture=Decimal("0"))
+        CompteTresorerie(
+            utilisateur_id=utilisateur_id,
+            nom="Caisse",
+            type_compte=TypeCompteTresorerie.CAISSE,
+            solde_ouverture=Decimal("0"),
+        )
+    )
+    session.add(
+        CompteTresorerie(
+            utilisateur_id=utilisateur_id,
+            nom="Banque principale",
+            type_compte=TypeCompteTresorerie.BANQUE,
+            solde_ouverture=Decimal("0"),
+        )
     )
     session.commit()

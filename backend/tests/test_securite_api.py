@@ -80,7 +80,7 @@ def test_connexion_apres_inscription():
         app.dependency_overrides.clear()
 
 
-def test_inscription_fermee_apres_premier_compte():
+def test_inscription_ouverte_deuxieme_compte():
     client = _client_avec_db()
     try:
         _jeton(client)
@@ -88,7 +88,7 @@ def test_inscription_fermee_apres_premier_compte():
             "/api/auth/inscription",
             json={"email": "autre@example.com", "mot_de_passe": MDP},
         )
-        assert reponse.status_code == 403
+        assert reponse.status_code == 201
     finally:
         app.dependency_overrides.clear()
 

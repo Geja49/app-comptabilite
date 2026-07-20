@@ -42,7 +42,7 @@ const liensConfig = [
 ]
 
 const titresPage = {
-  accueil: { titre: 'Tableau de bord', sousTitre: 'Vue d’ensemble du mois en cours' },
+  accueil: { titre: 'Accueil', sousTitre: 'Tableau de bord et accès rapide' },
   revenus: { titre: 'Revenus', sousTitre: 'Saisie journalière des courses' },
   depenses: { titre: 'Dépenses', sousTitre: 'Charges et location véhicule' },
   kilometrage: { titre: 'Kilométrage', sousTitre: 'Suivi odomètre et taux pro' },

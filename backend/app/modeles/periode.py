@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -6,9 +6,14 @@ from app.database import Base
 
 class Periode(Base):
     __tablename__ = "periodes"
-    __table_args__ = (UniqueConstraint("annee", "mois", name="uq_periode_annee_mois"),)
+    __table_args__ = (
+        UniqueConstraint("utilisateur_id", "annee", "mois", name="uq_periode_utilisateur_annee_mois"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    utilisateur_id: Mapped[int] = mapped_column(
+        ForeignKey("utilisateurs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     annee: Mapped[int] = mapped_column(Integer, nullable=False)
     mois: Mapped[int] = mapped_column(Integer, nullable=False)
 

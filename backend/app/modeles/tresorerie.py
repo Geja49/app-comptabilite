@@ -26,6 +26,9 @@ class CompteTresorerie(Base):
     __tablename__ = "comptes_tresorerie"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    utilisateur_id: Mapped[int] = mapped_column(
+        ForeignKey("utilisateurs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     nom: Mapped[str] = mapped_column(String(100), nullable=False)
     type_compte: Mapped[str] = mapped_column(String(20), nullable=False)
     solde_ouverture: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=Decimal("0"))

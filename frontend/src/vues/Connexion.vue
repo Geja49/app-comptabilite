@@ -15,10 +15,9 @@ const erreur = ref('')
 onMounted(async () => {
   try {
     const statut = await obtenirStatutAuth()
-    inscriptionOuverte.value = statut.inscription_ouverte
-    modeInscription.value = statut.inscription_ouverte
+    inscriptionOuverte.value = statut.inscription_ouverte !== false
   } catch {
-    inscriptionOuverte.value = false
+    inscriptionOuverte.value = true
   }
 })
 
@@ -82,7 +81,7 @@ async function soumettre() {
       </div>
 
       <p v-if="modeInscription" class="text-sm text-muet leading-relaxed">
-        Premier démarrage : créez votre compte. L’inscription sera ensuite fermée.
+        Créez votre compte : vos revenus, dépenses et rapports restent privés, séparés des autres chauffeurs.
       </p>
 
       <div class="space-y-1.5">
@@ -130,10 +129,10 @@ async function soumettre() {
         class="w-full text-sm text-indigo-700 font-semibold"
         @click="modeInscription = true"
       >
-        Créer le premier compte
+        Créer un compte
       </button>
       <button
-        v-if="modeInscription && !inscriptionOuverte"
+        v-if="modeInscription"
         type="button"
         class="w-full text-sm text-muet font-semibold"
         @click="modeInscription = false"

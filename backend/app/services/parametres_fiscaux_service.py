@@ -16,10 +16,10 @@ TAUX_DEFAUT = {
 }
 
 
-def obtenir_ou_creer_parametres_fiscaux(session: Session, annee: int) -> ParametresFiscaux:
-    parametres = session.get(ParametresFiscaux, annee)
+def obtenir_ou_creer_parametres_fiscaux(session: Session, annee: int, utilisateur_id: int) -> ParametresFiscaux:
+    parametres = session.get(ParametresFiscaux, (utilisateur_id, annee))
     if parametres is None:
-        parametres = ParametresFiscaux(annee=annee, **TAUX_DEFAUT)
+        parametres = ParametresFiscaux(utilisateur_id=utilisateur_id, annee=annee, **TAUX_DEFAUT)
         session.add(parametres)
         session.commit()
         session.refresh(parametres)

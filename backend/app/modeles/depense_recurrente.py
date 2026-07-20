@@ -23,6 +23,9 @@ class DepenseRecurrente(Base):
     __tablename__ = "depenses_recurrentes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    utilisateur_id: Mapped[int] = mapped_column(
+        ForeignKey("utilisateurs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     fournisseur: Mapped[str] = mapped_column(String(200), nullable=False)
     categorie_id: Mapped[int] = mapped_column(ForeignKey("categories_depense.id"), nullable=False)
     montant: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)

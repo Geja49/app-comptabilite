@@ -16,10 +16,10 @@ from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_
 from app.pagination import LIMITE_MAX
 
 
-def obtenir_ou_creer_periode(session: Session, annee: int, mois: int) -> Periode:
-    periode = session.query(Periode).filter_by(annee=annee, mois=mois).first()
+def obtenir_ou_creer_periode(session: Session, annee: int, mois: int, utilisateur_id: int) -> Periode:
+    periode = session.query(Periode).filter_by(annee=annee, mois=mois, utilisateur_id=utilisateur_id).first()
     if periode is None:
-        periode = Periode(annee=annee, mois=mois)
+        periode = Periode(annee=annee, mois=mois, utilisateur_id=utilisateur_id)
         session.add(periode)
         session.commit()
         session.refresh(periode)
@@ -107,7 +107,7 @@ def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Dep
     """
     recurrentes = (
         session.query(DepenseRecurrente)
-        .filter_by(actif=True)
+        .filter_by(actif=True, utilisateur_id=periode.utilisateur_id)
         .limit(LIMITE_MAX)
         .all()
     )
@@ -154,9 +154,9 @@ def generer_depenses_recurrentes(session: Session, periode: Periode) -> list[Dep
     return creees
 
 
-def obtenir_donnees_periode(session: Session, annee: int, mois: int) -> dict:
-    periode = obtenir_ou_creer_periode(session, annee, mois)
-    parametres = obtenir_ou_creer_parametres_fiscaux(session, annee)
+def obtenir_donnees_periode(session: Session, annee: int, mois: int, utilisateur_id: int) -> dict:
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
+    parametres = obtenir_ou_creer_parametres_fiscaux(session, annee, utilisateur_id)
     revenus = [construire_revenu_calcule(r) for r in sorted(periode.revenus, key=lambda x: x.date)]
     depenses = [construire_depense_calculee(d) for d in sorted(periode.depenses, key=lambda x: x.date)]
     km_entrees = [construire_km_calcule(e) for e in sorted(periode.entrees_kilometrage, key=lambda x: x.date)]

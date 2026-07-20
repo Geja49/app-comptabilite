@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
+from app.dependances import obtenir_utilisateur_id
 from app.modeles import DepenseRecurrente, MethodeTpsTvq
 from app.schemas import (
     AlerteReponse,
@@ -102,11 +103,15 @@ def _total_annuel(
 
 
 @routeur.get("/api/sommaire/{annee}", response_model=SommaireAnnuelReponse)
-def sommaire_annuel(annee: int, session: Session = Depends(obtenir_session)):
-    parametres = obtenir_ou_creer_parametres_fiscaux(session, annee)
+def sommaire_annuel(
+    annee: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    parametres = obtenir_ou_creer_parametres_fiscaux(session, annee, utilisateur_id)
     mois_bruts: list[dict] = []
     for mois in range(1, 13):
-        donnees = obtenir_donnees_periode(session, annee, mois)
+        donnees = obtenir_donnees_periode(session, annee, mois, utilisateur_id)
         mois_bruts.append({**donnees["sommaire"], "mois": mois})
 
     rabais_total = Decimal("0")
@@ -152,6 +157,7 @@ def tableau_de_bord(
     annee: int | None = None,
     mois: int | None = None,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     aujourd_hui = date.today()
     annee_cible = annee or aujourd_hui.year
@@ -159,7 +165,7 @@ def tableau_de_bord(
     if mois_affiche < 1 or mois_affiche > 12:
         mois_affiche = aujourd_hui.month
 
-    donnees = obtenir_donnees_periode(session, annee_cible, mois_affiche)
+    donnees = obtenir_donnees_periode(session, annee_cible, mois_affiche, utilisateur_id)
     sommaire = _sommaire_mensuel(mois_affiche, donnees)
     alertes: list[AlerteReponse] = []
 
@@ -178,7 +184,7 @@ def tableau_de_bord(
 
     recurrentes_actives = (
         session.query(DepenseRecurrente)
-        .filter_by(actif=True)
+        .filter_by(actif=True, utilisateur_id=utilisateur_id)
         .limit(LIMITE_MAX)
         .all()
     )
@@ -208,7 +214,7 @@ def tableau_de_bord(
 
     serie_mensuelle: list[PointSerieMensuelle] = []
     for mois in range(1, 13):
-        d_mois = obtenir_donnees_periode(session, annee_cible, mois)
+        d_mois = obtenir_donnees_periode(session, annee_cible, mois, utilisateur_id)
         ventes = arrondir(Decimal(str(d_mois["sommaire"]["revenu_brut"])))
         depenses = arrondir(Decimal(str(d_mois["sommaire"]["depenses_totales"])))
         jours = len({r["date"] for r in d_mois["revenus"]})
@@ -240,8 +246,13 @@ def tableau_de_bord(
 
 
 @routeur.get("/api/export/excel/{annee}/{mois}")
-def export_excel(annee: int, mois: int, session: Session = Depends(obtenir_session)):
-    donnees = obtenir_donnees_periode(session, annee, mois)
+def export_excel(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    donnees = obtenir_donnees_periode(session, annee, mois, utilisateur_id)
     buffer = exporter_mois_excel(annee, mois, donnees)
     nom = f"comptabilite_{annee}_{mois:02d}.xlsx"
     return StreamingResponse(
@@ -252,9 +263,13 @@ def export_excel(annee: int, mois: int, session: Session = Depends(obtenir_sessi
 
 
 @routeur.get("/api/export/pdf/{annee}")
-def export_pdf(annee: int, session: Session = Depends(obtenir_session)):
-    sommaire = sommaire_annuel(annee, session)
-    details = [obtenir_donnees_periode(session, annee, m) for m in range(1, 13)]
+def export_pdf(
+    annee: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
+    sommaire = sommaire_annuel(annee, session, utilisateur_id)
+    details = [obtenir_donnees_periode(session, annee, m, utilisateur_id) for m in range(1, 13)]
     buffer = exporter_annee_pdf(annee, sommaire.model_dump(), details)
     nom = f"rapport_comptable_{annee}.pdf"
     return StreamingResponse(

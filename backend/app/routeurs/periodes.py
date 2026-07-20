@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import obtenir_session
-from app.modeles import Depense, EntreeKilometrage, Revenu
+from app.dependances import obtenir_utilisateur_id
+from app.modeles import CategorieDepense, Depense, EntreeKilometrage, Revenu
 from app.pagination import appliquer_pagination, params_pagination
 from app.schemas import (
     DepenseCreate,
@@ -48,23 +49,49 @@ def _exiger_appartenance_periode(entite, periode, detail: str = "Ressource intro
         raise HTTPException(status_code=404, detail=detail)
 
 
+def _exiger_categorie(session: Session, categorie_id: int, utilisateur_id: int) -> CategorieDepense:
+    categorie = (
+        session.query(CategorieDepense)
+        .filter_by(id=categorie_id, utilisateur_id=utilisateur_id)
+        .first()
+    )
+    if not categorie:
+        raise HTTPException(status_code=404, detail="Catégorie introuvable")
+    return categorie
+
+
 @routeur.post("", status_code=201)
-def creer_periode(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def creer_periode(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
     _verifier_periode(annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     return {"id": periode.id, "annee": annee, "mois": mois}
 
 
 @routeur.get("")
-def obtenir_periode(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def obtenir_periode(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
     _verifier_periode(annee, mois)
-    return obtenir_donnees_periode(session, annee, mois)
+    return obtenir_donnees_periode(session, annee, mois, utilisateur_id)
 
 
 @routeur.post("/generer-recurrentes")
-def generer_recurrentes(annee: int, mois: int, session: Session = Depends(obtenir_session)):
+def generer_recurrentes(
+    annee: int,
+    mois: int,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
     _verifier_periode(annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     creees = generer_depenses_recurrentes(session, periode)
     return {"generees": len(creees)}
 
@@ -74,20 +101,27 @@ def lister_revenus(
     annee: int,
     mois: int,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
     pagination: tuple[int, int] = Depends(params_pagination),
 ):
     _verifier_periode(annee, mois)
-    donnees = obtenir_donnees_periode(session, annee, mois)
+    donnees = obtenir_donnees_periode(session, annee, mois, utilisateur_id)
     decalage, limite = pagination
     return appliquer_pagination(donnees["revenus"], decalage, limite)
 
 
 @routeur.post("/revenus", response_model=RevenuReponse, status_code=201)
-def ajouter_revenu(annee: int, mois: int, donnees: RevenuCreate, session: Session = Depends(obtenir_session)):
+def ajouter_revenu(
+    annee: int,
+    mois: int,
+    donnees: RevenuCreate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     revenu = Revenu(
         periode_id=periode.id,
         date=donnees.date,
@@ -105,12 +139,17 @@ def ajouter_revenu(annee: int, mois: int, donnees: RevenuCreate, session: Sessio
 
 @routeur.put("/revenus/{revenu_id}", response_model=RevenuReponse)
 def modifier_revenu(
-    annee: int, mois: int, revenu_id: int, donnees: RevenuUpdate, session: Session = Depends(obtenir_session)
+    annee: int,
+    mois: int,
+    revenu_id: int,
+    donnees: RevenuUpdate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     revenu = session.get(Revenu, revenu_id)
     _exiger_appartenance_periode(revenu, periode, "Revenu introuvable")
     revenu.date = donnees.date
@@ -126,10 +165,11 @@ def modifier_revenu(
 def supprimer_revenu(
     annee: int, mois: int, revenu_id: int, confirmer_modification_passee: bool = False,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     revenu = session.get(Revenu, revenu_id)
     _exiger_appartenance_periode(revenu, periode, "Revenu introuvable")
     session.delete(revenu)
@@ -141,23 +181,31 @@ def lister_depenses(
     annee: int,
     mois: int,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
     pagination: tuple[int, int] = Depends(params_pagination),
 ):
     _verifier_periode(annee, mois)
     decalage, limite = pagination
     return appliquer_pagination(
-        obtenir_donnees_periode(session, annee, mois)["depenses"],
+        obtenir_donnees_periode(session, annee, mois, utilisateur_id)["depenses"],
         decalage,
         limite,
     )
 
 
 @routeur.post("/depenses", response_model=DepenseReponse, status_code=201)
-def ajouter_depense(annee: int, mois: int, donnees: DepenseCreate, session: Session = Depends(obtenir_session)):
+def ajouter_depense(
+    annee: int,
+    mois: int,
+    donnees: DepenseCreate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
+):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    _exiger_categorie(session, donnees.categorie_id, utilisateur_id)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     taxes = (
         calculs.calculer_taxes_depuis_ttc(donnees.montant_saisi)
         if donnees.saisie_ttc
@@ -180,12 +228,18 @@ def ajouter_depense(annee: int, mois: int, donnees: DepenseCreate, session: Sess
 
 @routeur.put("/depenses/{depense_id}", response_model=DepenseReponse)
 def modifier_depense(
-    annee: int, mois: int, depense_id: int, donnees: DepenseUpdate, session: Session = Depends(obtenir_session)
+    annee: int,
+    mois: int,
+    depense_id: int,
+    donnees: DepenseUpdate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    _exiger_categorie(session, donnees.categorie_id, utilisateur_id)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     depense = session.get(Depense, depense_id)
     _exiger_appartenance_periode(depense, periode, "Dépense introuvable")
     taxes = (
@@ -208,10 +262,11 @@ def modifier_depense(
 def supprimer_depense(
     annee: int, mois: int, depense_id: int, confirmer_modification_passee: bool = False,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     depense = session.get(Depense, depense_id)
     _exiger_appartenance_periode(depense, periode, "Dépense introuvable")
     session.delete(depense)
@@ -223,12 +278,13 @@ def lister_kilometrage(
     annee: int,
     mois: int,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
     pagination: tuple[int, int] = Depends(params_pagination),
 ):
     _verifier_periode(annee, mois)
     decalage, limite = pagination
     return appliquer_pagination(
-        obtenir_donnees_periode(session, annee, mois)["kilometrage"],
+        obtenir_donnees_periode(session, annee, mois, utilisateur_id)["kilometrage"],
         decalage,
         limite,
     )
@@ -236,7 +292,11 @@ def lister_kilometrage(
 
 @routeur.post("/kilometrage", response_model=EntreeKilometrageReponse, status_code=201)
 def ajouter_kilometrage(
-    annee: int, mois: int, donnees: EntreeKilometrageCreate, session: Session = Depends(obtenir_session)
+    annee: int,
+    mois: int,
+    donnees: EntreeKilometrageCreate,
+    session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
@@ -245,7 +305,7 @@ def ajouter_kilometrage(
         raise HTTPException(status_code=400, detail="L'odomètre de fin doit être supérieur au début")
     if donnees.km_professionnels > (donnees.odometre_fin - donnees.odometre_debut):
         raise HTTPException(status_code=400, detail="Les km professionnels ne peuvent dépasser le total du jour")
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     entree = EntreeKilometrage(
         periode_id=periode.id,
         date=donnees.date,
@@ -263,13 +323,14 @@ def ajouter_kilometrage(
 def modifier_kilometrage(
     annee: int, mois: int, entree_id: int, donnees: EntreeKilometrageUpdate,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
     if donnees.odometre_fin < donnees.odometre_debut:
         raise HTTPException(status_code=400, detail="L'odomètre de fin doit être supérieur au début")
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     entree = session.get(EntreeKilometrage, entree_id)
     _exiger_appartenance_periode(entree, periode, "Entrée kilométrage introuvable")
     entree.date = donnees.date
@@ -285,10 +346,11 @@ def modifier_kilometrage(
 def supprimer_kilometrage(
     annee: int, mois: int, entree_id: int, confirmer_modification_passee: bool = False,
     session: Session = Depends(obtenir_session),
+    utilisateur_id: int = Depends(obtenir_utilisateur_id),
 ):
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, confirmer_modification_passee)
-    periode = obtenir_ou_creer_periode(session, annee, mois)
+    periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     entree = session.get(EntreeKilometrage, entree_id)
     _exiger_appartenance_periode(entree, periode, "Entrée kilométrage introuvable")
     session.delete(entree)

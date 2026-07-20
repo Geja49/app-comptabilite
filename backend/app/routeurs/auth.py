@@ -5,6 +5,7 @@ from app.database import obtenir_session
 from app.modeles.utilisateur import Utilisateur
 from app.schemas.auth import AuthStatutReponse, IdentifiantsAuth, JetonReponse, UtilisateurReponse
 from app.services import auth_service
+from app.services.espace_utilisateur import initialiser_espace_utilisateur
 
 routeur = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -20,20 +21,17 @@ def exiger_charge_jwt(requete: Request) -> dict:
 
 
 @routeur.get("/statut", response_model=AuthStatutReponse)
-def statut_auth(session: Session = Depends(obtenir_session)):
-    return AuthStatutReponse(inscription_ouverte=auth_service.compter_utilisateurs(session) == 0)
+def statut_auth():
+    """Inscription toujours ouverte : plusieurs comptes isolés sont autorisés."""
+    return AuthStatutReponse(inscription_ouverte=True)
 
 
 @routeur.post("/inscription", response_model=JetonReponse, status_code=201)
 def inscription(donnees: IdentifiantsAuth, session: Session = Depends(obtenir_session)):
-    if auth_service.compter_utilisateurs(session) > 0:
-        raise HTTPException(
-            status_code=403,
-            detail="L'inscription est fermée. Demandez un accès à l'administrateur.",
-        )
     if auth_service.trouver_par_email(session, donnees.email):
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
     utilisateur = auth_service.creer_utilisateur(session, donnees.email, donnees.mot_de_passe)
+    initialiser_espace_utilisateur(session, utilisateur.id)
     return JetonReponse(jeton=auth_service.creer_jeton(utilisateur), email=utilisateur.email)
 
 
