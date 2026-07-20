@@ -52,7 +52,7 @@ async function soumettre() {
         <span class="cs-topper">Québec · Transport de personnes</span>
         <h1 class="cs-title">ComptaTaxi</h1>
         <p class="cs-text">
-          Comptabilité taxi claire : chaque compte garde ses propres données.
+          Gagnez du temps, suivez vos courses et restez prêt pour vos impôts — en un seul espace.
         </p>
 
         <form class="cs-formulaire" @submit.prevent="soumettre">
