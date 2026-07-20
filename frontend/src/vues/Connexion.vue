@@ -46,132 +46,334 @@ async function soumettre() {
 </script>
 
 <template>
-  <div class="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
-    <div class="absolu-fond" aria-hidden="true">
-      <div class="grille" />
+  <section id="hero-connexion" class="hero-connexion">
+    <div class="cs-container">
+      <div class="cs-flex-group">
+        <span class="cs-topper">ComptaTaxi · Québec</span>
+        <h1 class="cs-title">Votre comptabilité taxi, claire et à jour</h1>
+        <p class="cs-text">
+          Connectez-vous à votre espace privé : revenus, dépenses, taxes et trésorerie restent
+          séparés pour chaque chauffeur.
+        </p>
+
+        <form class="cs-formulaire" @submit.prevent="soumettre">
+          <p class="cs-form-titre">
+            {{ modeInscription ? 'Créer un compte' : 'Espace sécurisé' }}
+          </p>
+
+          <div class="cs-champ">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              required
+              autocomplete="username"
+              placeholder="vous@exemple.com"
+            />
+          </div>
+
+          <div class="cs-champ">
+            <label for="mdp">Mot de passe</label>
+            <input
+              id="mdp"
+              v-model="motDePasse"
+              type="password"
+              required
+              minlength="8"
+              autocomplete="current-password"
+              placeholder="Au moins 8 caractères"
+            />
+          </div>
+
+          <p v-if="erreur" class="cs-erreur">{{ erreur }}</p>
+
+          <div class="cs-button-group">
+            <button type="submit" class="cs-button-solid cs-button" :disabled="chargement">
+              {{ chargement ? 'Patientez…' : modeInscription ? 'Créer mon compte' : 'Se connecter' }}
+            </button>
+            <button
+              v-if="inscriptionOuverte && !modeInscription"
+              type="button"
+              class="cs-button-transparent cs-button"
+              @click="modeInscription = true"
+            >
+              Créer un compte
+            </button>
+            <button
+              v-else-if="modeInscription"
+              type="button"
+              class="cs-button-transparent cs-button"
+              @click="modeInscription = false"
+            >
+              Déjà un compte ?
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="cs-picture" aria-hidden="true">
+      <div class="cs-fond" />
       <div class="route">
         <div class="ligne-centrale" />
         <div class="voiture-animee">
           <img
             :src="taxiGif"
             alt=""
-            class="h-14 sm:h-20 w-auto drop-shadow-xl select-none pointer-events-none"
+            class="taxi-img"
             draggable="false"
           />
         </div>
       </div>
     </div>
-
-    <form
-      class="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md rounded-2xl shadow-carte border border-white/60 p-6 sm:p-8 space-y-5 animate-entree"
-      @submit.prevent="soumettre"
-    >
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-douce">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 17h8M6 9h12l-1 8H7L6 9zm3-4h6l1 4H8l1-4z" />
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-xl font-extrabold text-encre tracking-tight">ComptaTaxi</h1>
-          <p class="text-sm text-muet">
-            {{ modeInscription ? 'Créer le compte administrateur' : 'Espace sécurisé' }}
-          </p>
-        </div>
-      </div>
-
-      <p v-if="modeInscription" class="text-sm text-muet leading-relaxed">
-        Créez votre compte : vos revenus, dépenses et rapports restent privés, séparés des autres chauffeurs.
-      </p>
-
-      <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-encre" for="email">Email</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          required
-          autocomplete="username"
-          class="input"
-          placeholder="vous@exemple.com"
-        />
-      </div>
-
-      <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-encre" for="mdp">Mot de passe</label>
-        <input
-          id="mdp"
-          v-model="motDePasse"
-          type="password"
-          required
-          minlength="8"
-          autocomplete="current-password"
-          class="input"
-          placeholder="Au moins 8 caractères"
-        />
-      </div>
-
-      <p v-if="erreur" class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
-        {{ erreur }}
-      </p>
-
-      <button
-        type="submit"
-        class="btn-primary w-full py-3"
-        :disabled="chargement"
-      >
-        {{ chargement ? 'Patientez…' : modeInscription ? 'Créer mon compte' : 'Se connecter' }}
-      </button>
-
-      <button
-        v-if="inscriptionOuverte && !modeInscription"
-        type="button"
-        class="w-full text-sm text-indigo-700 font-semibold"
-        @click="modeInscription = true"
-      >
-        Créer un compte
-      </button>
-      <button
-        v-if="modeInscription"
-        type="button"
-        class="w-full text-sm text-muet font-semibold"
-        @click="modeInscription = false"
-      >
-        Déjà un compte ? Se connecter
-      </button>
-    </form>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.absolu-fond {
+.hero-connexion {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.hero-connexion .cs-picture {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+}
+
+.hero-connexion .cs-picture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #000;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hero-connexion .cs-fond {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 18% 18%, rgba(29, 78, 216, 0.14), transparent 42%),
-    radial-gradient(circle at 85% 8%, rgba(15, 23, 42, 0.06), transparent 36%),
-    linear-gradient(165deg, #F8FAFC 0%, #EEF2F7 48%, #E2E8F0 100%);
+    radial-gradient(ellipse 70% 80% at 18% 28%, rgba(29, 78, 216, 0.5), transparent 55%),
+    radial-gradient(ellipse 50% 60% at 88% 72%, rgba(15, 23, 42, 0.4), transparent 50%),
+    linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 42%, #0f172a 100%);
 }
 
-.grille {
+.hero-connexion .cs-container {
+  position: relative;
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: clamp(4rem, 12vw, 7rem) 0 clamp(7rem, 16vw, 10rem);
+}
+
+.hero-connexion .cs-container::before {
+  content: '';
   position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(180deg, black 0%, transparent 70%);
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(250, 251, 252, 0.5), rgba(250, 251, 252, 0));
+}
+
+.hero-connexion .cs-flex-group {
+  width: min(88vw, 28rem);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.hero-connexion .cs-topper {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  font-size: clamp(0.8125rem, 1.6vw, 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #93c5fd;
+}
+
+.hero-connexion .cs-title {
+  width: 100%;
+  margin: 0 auto 1.25rem;
+  text-align: center;
+  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1.15;
+  color: #fff;
+}
+
+.hero-connexion .cs-text {
+  width: 100%;
+  margin: 0 auto 2rem;
+  text-align: center;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  line-height: 1.5;
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.hero-connexion .cs-formulaire {
+  width: 100%;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: entree-carte 0.55s ease-out both;
+}
+
+.hero-connexion .cs-form-titre {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.hero-connexion .cs-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.hero-connexion .cs-champ label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.hero-connexion .cs-champ input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: #fff;
+}
+
+.hero-connexion .cs-champ input:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
+}
+
+.hero-connexion .cs-erreur {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.hero-connexion .cs-button-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.hero-connexion .cs-button {
+  min-width: 0;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.hero-connexion .cs-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.hero-connexion .cs-button-solid {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: none;
+  padding: 0 1.5rem;
+  line-height: 3rem;
+  text-align: center;
+  color: #fff;
+  background-color: #1d4ed8;
+}
+
+.hero-connexion .cs-button-solid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 0;
+  height: 100%;
+  background: #0f172a;
+  transition: width 0.3s;
+}
+
+.hero-connexion .cs-button-solid:hover:not(:disabled)::before {
+  width: 100%;
+}
+
+.hero-connexion .cs-button-transparent {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  padding: 0 1.25rem;
+  color: #1d4ed8;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+}
+
+.hero-connexion .cs-button-transparent::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: #e2e8f0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.hero-connexion .cs-button-transparent:hover::before {
+  transform: scaleX(1);
 }
 
 .route {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 11%;
-  height: 76px;
+  bottom: 0;
+  z-index: 2;
+  height: 72px;
   background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
   overflow: hidden;
-  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.12);
 }
 
 .ligne-centrale {
@@ -181,22 +383,23 @@ async function soumettre() {
   width: 200%;
   height: 4px;
   margin-top: -2px;
-  background: repeating-linear-gradient(
-    90deg,
-    #f8fafc 0 28px,
-    transparent 28px 52px
-  );
+  background: repeating-linear-gradient(90deg, #f8fafc 0 28px, transparent 28px 52px);
   animation: route-defile 1.1s linear infinite;
 }
 
 .voiture-animee {
   position: absolute;
-  bottom: 4px;
+  bottom: 2px;
   animation: voiture-roule 8s ease-in-out infinite;
 }
 
-.animate-entree {
-  animation: entree-carte 0.55s ease-out both;
+.taxi-img {
+  height: 3.25rem;
+  width: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
 }
 
 @keyframes route-defile {
@@ -223,10 +426,30 @@ async function soumettre() {
   }
 }
 
+@media (min-width: 48rem) {
+  .hero-connexion {
+    padding: 0 clamp(2rem, 5vw, 2.5rem);
+  }
+
+  .hero-connexion .cs-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(250, 251, 252, 0), rgba(250, 251, 252, 0.5));
+  }
+
+  .taxi-img {
+    height: 4.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ligne-centrale,
   .voiture-animee,
-  .animate-entree {
+  .cs-formulaire {
     animation: none;
   }
   .voiture-animee {
