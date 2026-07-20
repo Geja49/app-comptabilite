@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { connecter, inscrire, obtenirStatutAuth } from '../services/api'
+import taxiGif from '../static/photos/taxi.gif'
 
 const router = useRouter()
 const email = ref('')
@@ -52,88 +53,12 @@ async function soumettre() {
       <div class="route">
         <div class="ligne-centrale" />
         <div class="voiture-animee">
-          <svg viewBox="0 0 220 90" class="w-48 sm:w-56 drop-shadow-xl" aria-hidden="true">
-            <defs>
-              <linearGradient id="carrosserie" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#2563EB" />
-                <stop offset="55%" stop-color="#1D4ED8" />
-                <stop offset="100%" stop-color="#1E3A8A" />
-              </linearGradient>
-              <linearGradient id="vitre" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#E0F2FE" />
-                <stop offset="100%" stop-color="#93C5FD" />
-              </linearGradient>
-              <linearGradient id="jante" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#CBD5E1" />
-                <stop offset="100%" stop-color="#64748B" />
-              </linearGradient>
-              <filter id="ombre-voiture" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.28" />
-              </filter>
-            </defs>
-
-            <!-- Ombre au sol -->
-            <ellipse cx="112" cy="78" rx="78" ry="6" fill="#0f172a" opacity="0.22" />
-
-            <!-- Carrosserie moderne -->
-            <g filter="url(#ombre-voiture)">
-              <path
-                d="M36 58
-                   C38 48, 46 42, 58 40
-                   L78 28 C84 24, 96 22, 112 22
-                   L148 22 C162 22, 172 28, 178 36
-                   L196 48 C204 52, 208 56, 208 60
-                   L208 66 C208 70, 204 72, 198 72
-                   L40 72 C34 72, 30 70, 30 66
-                   L30 62 C30 60, 32 58, 36 58 Z"
-                fill="url(#carrosserie)"
-              />
-              <!-- Ligne de caractère -->
-              <path d="M48 58 H196" stroke="#60A5FA" stroke-width="1.2" opacity="0.35" />
-              <!-- Bas de caisse -->
-              <path d="M34 66 H200" stroke="#0F172A" stroke-width="2" opacity="0.25" stroke-linecap="round" />
-            </g>
-
-            <!-- Toit / vitre panoramique -->
-            <path
-              d="M82 28 L110 24 L146 24 L168 36 L150 48 L86 48 Z"
-              fill="url(#vitre)"
-              opacity="0.95"
-            />
-            <path d="M118 24 V48" stroke="#1E40AF" stroke-width="1" opacity="0.2" />
-
-            <!-- Phares LED -->
-            <rect x="198" y="50" width="10" height="6" rx="2" fill="#FDE68A" />
-            <rect x="199" y="51" width="7" height="2" rx="1" fill="#FFFBEB" opacity="0.9" />
-            <!-- Feux arrière -->
-            <rect x="30" y="50" width="9" height="6" rx="2" fill="#F87171" />
-
-            <!-- Pare-chocs -->
-            <rect x="200" y="62" width="10" height="5" rx="1.5" fill="#E2E8F0" opacity="0.85" />
-            <rect x="28" y="62" width="10" height="5" rx="1.5" fill="#E2E8F0" opacity="0.75" />
-
-            <!-- Gyrophare taxi -->
-            <rect x="108" y="14" width="18" height="8" rx="2" fill="#FBBF24" />
-            <rect x="110" y="16" width="14" height="4" rx="1" fill="#FEF3C7" />
-            <text x="117" y="20" text-anchor="middle" fill="#92400E" font-size="5" font-weight="800">TAXI</text>
-
-            <!-- Portière / poignée -->
-            <rect x="128" y="52" width="10" height="2.5" rx="1" fill="#BFDBFE" opacity="0.7" />
-
-            <!-- Roues (jantes modernes) -->
-            <g class="roue">
-              <circle cx="64" cy="70" r="12" fill="#0F172A" />
-              <circle cx="64" cy="70" r="7.5" fill="url(#jante)" />
-              <circle cx="64" cy="70" r="3" fill="#1E293B" />
-              <path d="M64 64.5 V75.5 M58.5 70 H69.5" stroke="#F8FAFC" stroke-width="1.2" opacity="0.55" />
-            </g>
-            <g class="roue">
-              <circle cx="168" cy="70" r="12" fill="#0F172A" />
-              <circle cx="168" cy="70" r="7.5" fill="url(#jante)" />
-              <circle cx="168" cy="70" r="3" fill="#1E293B" />
-              <path d="M168 64.5 V75.5 M162.5 70 H173.5" stroke="#F8FAFC" stroke-width="1.2" opacity="0.55" />
-            </g>
-          </svg>
+          <img
+            :src="taxiGif"
+            alt=""
+            class="h-14 sm:h-20 w-auto drop-shadow-xl select-none pointer-events-none"
+            draggable="false"
+          />
         </div>
       </div>
     </div>
@@ -267,14 +192,8 @@ async function soumettre() {
 
 .voiture-animee {
   position: absolute;
-  bottom: 6px;
+  bottom: 4px;
   animation: voiture-roule 8s ease-in-out infinite;
-}
-
-.roue {
-  transform-origin: center;
-  animation: roue-tourne 0.55s linear infinite;
-  transform-box: fill-box;
 }
 
 .animate-entree {
@@ -288,15 +207,10 @@ async function soumettre() {
 
 @keyframes voiture-roule {
   0% { left: -28%; transform: translateY(0); }
-  45% { transform: translateY(-3px); }
+  45% { transform: translateY(-2px); }
   50% { left: 68%; transform: translateY(0); }
-  55% { transform: translateY(-2px); }
+  55% { transform: translateY(-1px); }
   100% { left: 112%; transform: translateY(0); }
-}
-
-@keyframes roue-tourne {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 @keyframes entree-carte {
@@ -313,7 +227,6 @@ async function soumettre() {
 @media (prefers-reduced-motion: reduce) {
   .ligne-centrale,
   .voiture-animee,
-  .roue,
   .animate-entree {
     animation: none;
   }
