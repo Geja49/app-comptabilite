@@ -49,16 +49,15 @@ async function soumettre() {
   <section id="hero-connexion" class="hero-connexion">
     <div class="cs-container">
       <div class="cs-flex-group">
-        <span class="cs-topper">ComptaTaxi · Québec</span>
-        <h1 class="cs-title">Votre comptabilité taxi, claire et à jour</h1>
+        <span class="cs-topper">Québec · Transport de personnes</span>
+        <h1 class="cs-title">ComptaTaxi</h1>
         <p class="cs-text">
-          Connectez-vous à votre espace privé : revenus, dépenses, taxes et trésorerie restent
-          séparés pour chaque chauffeur.
+          Comptabilité taxi claire : chaque compte garde ses propres données.
         </p>
 
         <form class="cs-formulaire" @submit.prevent="soumettre">
           <p class="cs-form-titre">
-            {{ modeInscription ? 'Créer un compte' : 'Espace sécurisé' }}
+            {{ modeInscription ? 'Créer un compte' : 'Se connecter' }}
           </p>
 
           <div class="cs-champ">
@@ -132,13 +131,26 @@ async function soumettre() {
 
 <style scoped>
 .hero-connexion {
+  /* Échelle typo unique */
+  --texte-xs: 0.8125rem;   /* 13px — topper, labels */
+  --texte-sm: 0.875rem;    /* 14px — erreurs */
+  --texte-base: 0.9375rem; /* 15px — corps, champs, boutons */
+  --texte-md: 1.0625rem;   /* 17px — titre formulaire */
+  --texte-titre: clamp(2rem, 6vw, 2.5rem);
+  --interligne: 1.45;
+  --interligne-titre: 1.15;
+  --rayon: 0.75rem;
+  --hauteur-controle: 2.75rem;
+
   position: relative;
   z-index: 1;
   min-height: 100vh;
   overflow: hidden;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
   display: flex;
   align-items: center;
+  font-size: var(--texte-base);
+  line-height: var(--interligne);
 }
 
 .hero-connexion .cs-picture {
@@ -172,7 +184,7 @@ async function soumettre() {
   width: 100%;
   max-width: 80rem;
   margin: 0 auto;
-  padding: clamp(4rem, 12vw, 7rem) 0 clamp(7rem, 16vw, 10rem);
+  padding: clamp(3.5rem, 10vw, 5.5rem) 0 clamp(6.5rem, 14vw, 8.5rem);
 }
 
 .hero-connexion .cs-container::before {
@@ -186,87 +198,94 @@ async function soumettre() {
 }
 
 .hero-connexion .cs-flex-group {
-  width: min(88vw, 28rem);
+  width: min(100%, 24rem);
   margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .hero-connexion .cs-topper {
   display: block;
-  width: 100%;
-  margin-bottom: 1rem;
-  text-align: center;
+  margin: 0 0 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1rem;
-  font-size: clamp(0.8125rem, 1.6vw, 1rem);
+  letter-spacing: 0.08em;
+  font-size: var(--texte-xs);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: var(--interligne-titre);
   color: #93c5fd;
 }
 
 .hero-connexion .cs-title {
-  width: 100%;
-  margin: 0 auto 1.25rem;
-  text-align: center;
-  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  margin: 0 0 0.75rem;
+  font-size: var(--texte-titre);
   font-weight: 900;
-  line-height: 1.15;
+  letter-spacing: -0.02em;
+  line-height: var(--interligne-titre);
   color: #fff;
 }
 
 .hero-connexion .cs-text {
-  width: 100%;
-  margin: 0 auto 2rem;
-  text-align: center;
-  font-size: clamp(1rem, 1.8vw, 1.15rem);
-  line-height: 1.5;
+  margin: 0 0 1.5rem;
+  font-size: var(--texte-base);
+  font-weight: 500;
+  line-height: var(--interligne);
   color: rgba(248, 250, 252, 0.9);
 }
 
 .hero-connexion .cs-formulaire {
   width: 100%;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
+  text-align: left;
   animation: entree-carte 0.55s ease-out both;
 }
 
 .hero-connexion .cs-form-titre {
-  margin: 0;
-  font-size: 0.95rem;
+  margin: 0 0 0.125rem;
+  font-size: var(--texte-md);
   font-weight: 700;
+  line-height: var(--interligne-titre);
   color: #0f172a;
 }
 
 .hero-connexion .cs-champ {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.375rem;
 }
 
 .hero-connexion .cs-champ label {
-  font-size: 0.85rem;
+  font-size: var(--texte-xs);
   font-weight: 600;
-  color: #0f172a;
+  line-height: var(--interligne-titre);
+  color: #334155;
 }
 
 .hero-connexion .cs-champ input {
   width: 100%;
+  height: var(--hauteur-controle);
   box-sizing: border-box;
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  padding: 0.7rem 0.85rem;
-  font-size: 0.95rem;
+  border-radius: var(--rayon);
+  padding: 0 0.875rem;
+  font-size: var(--texte-base);
+  line-height: 1;
   color: #0f172a;
   background: #fff;
+}
+
+.hero-connexion .cs-champ input::placeholder {
+  font-size: var(--texte-base);
+  color: #94a3b8;
 }
 
 .hero-connexion .cs-champ input:focus {
@@ -277,30 +296,33 @@ async function soumettre() {
 
 .hero-connexion .cs-erreur {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--texte-sm);
+  line-height: var(--interligne);
   color: #dc2626;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 0.75rem;
-  padding: 0.6rem 0.75rem;
+  border-radius: var(--rayon);
+  padding: 0.625rem 0.75rem;
 }
 
 .hero-connexion .cs-button-group {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.75rem;
+  gap: 0.625rem;
   margin-top: 0.25rem;
 }
 
 .hero-connexion .cs-button {
-  min-width: 0;
   width: 100%;
-  font-size: 1rem;
+  height: var(--hauteur-controle);
+  font-size: var(--texte-base);
   font-weight: 700;
+  line-height: 1;
   text-decoration: none;
   box-sizing: border-box;
   cursor: pointer;
+  border-radius: var(--rayon);
   transition: color 0.3s;
 }
 
@@ -314,8 +336,7 @@ async function soumettre() {
   z-index: 1;
   overflow: hidden;
   border: none;
-  padding: 0 1.5rem;
-  line-height: 3rem;
+  padding: 0 1.25rem;
   text-align: center;
   color: #fff;
   background-color: #1d4ed8;
@@ -343,7 +364,6 @@ async function soumettre() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 3rem;
   padding: 0 1.25rem;
   color: #1d4ed8;
   background: transparent;
@@ -356,6 +376,7 @@ async function soumettre() {
   inset: -1px;
   z-index: -1;
   background: #e2e8f0;
+  border-radius: var(--rayon);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s;
