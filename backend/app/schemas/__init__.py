@@ -126,6 +126,7 @@ class ParametresFiscauxReponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     annee: int
     methode_tps_tvq: str
+    frequence_declaration: str = "annuelle"
     tps_taux_reguliere: Decimal
     tvq_taux_reguliere: Decimal
     tps_taux_rapide: Decimal
@@ -137,6 +138,9 @@ class ParametresFiscauxReponse(BaseModel):
 
 class ParametresFiscauxUpdate(BaseModel):
     methode_tps_tvq: str = Field(pattern="^(reguliere|rapide)$")
+    frequence_declaration: str | None = Field(
+        default=None, pattern="^(mensuelle|trimestrielle|annuelle)$"
+    )
 
 
 class SommaireMensuelReponse(BaseModel):
@@ -170,6 +174,18 @@ class AlerteReponse(BaseModel):
     message: str
 
 
+class RappelFiscalReponse(BaseModel):
+    impot: str
+    type: str
+    titre: str
+    description: str
+    date_limite: str
+    jours_restants: int
+    urgence: str
+    organisme: str
+    periode: str
+
+
 class PointSerieMensuelle(BaseModel):
     mois: int
     mois_nom: str
@@ -200,5 +216,6 @@ class TableauDeBordReponse(BaseModel):
     periode: PeriodeReponse
     sommaire: SommaireMensuelReponse
     alertes: list[AlerteReponse]
+    rappels_fiscaux: list[RappelFiscalReponse] = []
     serie_mensuelle: list[PointSerieMensuelle] = []
     productivite: ProductiviteReponse | None = None

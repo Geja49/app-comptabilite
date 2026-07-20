@@ -129,8 +129,12 @@ export function obtenirParametresFiscaux(annee) {
   return api.get(`/api/parametres-fiscaux/${annee}`)
 }
 
-export function definirMethodeFiscale(annee, methode) {
-  return api.put(`/api/parametres-fiscaux/${annee}`, { methode_tps_tvq: methode })
+export function definirMethodeFiscale(annee, methode, frequenceDeclaration = null) {
+  const corps = { methode_tps_tvq: methode }
+  if (frequenceDeclaration) {
+    corps.frequence_declaration = frequenceDeclaration
+  }
+  return api.put(`/api/parametres-fiscaux/${annee}`, corps)
 }
 
 export function estPeriodePassee(annee, mois) {

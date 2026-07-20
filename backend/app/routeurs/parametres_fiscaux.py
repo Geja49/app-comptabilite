@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import obtenir_session
 from app.dependances import obtenir_utilisateur_id
 from app.modeles import MethodeTpsTvq
+from app.modeles.parametres_fiscaux import FrequenceDeclarationTpsTvq
 from app.schemas import ParametresFiscauxReponse, ParametresFiscauxUpdate
 from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_fiscaux
 
@@ -34,6 +35,10 @@ def modifier_parametres(
         raise HTTPException(status_code=400, detail="Méthode invalide")
     parametres = obtenir_ou_creer_parametres_fiscaux(session, annee, utilisateur_id)
     parametres.methode_tps_tvq = donnees.methode_tps_tvq
+    if donnees.frequence_declaration is not None:
+        if donnees.frequence_declaration not in {f.value for f in FrequenceDeclarationTpsTvq}:
+            raise HTTPException(status_code=400, detail="Fréquence de déclaration invalide")
+        parametres.frequence_declaration = donnees.frequence_declaration
     session.commit()
     session.refresh(parametres)
     return parametres

@@ -13,6 +13,7 @@ from app.schemas import (
     PeriodeReponse,
     PointSerieMensuelle,
     ProductiviteReponse,
+    RappelFiscalReponse,
     SommaireAnnuelReponse,
     SommaireMensuelReponse,
     TableauDeBordReponse,
@@ -23,6 +24,7 @@ from app.services.export_pdf import exporter_annee_pdf
 from app.services.impots import appliquer_rabais_annuel_rapide
 from app.services.parametres_fiscaux_service import obtenir_ou_creer_parametres_fiscaux
 from app.services.periode_service import est_periode_passee, obtenir_donnees_periode
+from app.services.rappels_fiscaux import generer_rappels_fiscaux
 
 routeur = APIRouter(tags=["rapports"])
 
@@ -231,6 +233,9 @@ def tableau_de_bord(
             )
         )
 
+    parametres_fiscaux = donnees["parametres_fiscaux"]
+    frequence = getattr(parametres_fiscaux, "frequence_declaration", None) or "annuelle"
+
     return TableauDeBordReponse(
         periode=PeriodeReponse(
             id=donnees["periode"]["id"],
@@ -240,6 +245,10 @@ def tableau_de_bord(
         ),
         sommaire=sommaire,
         alertes=alertes,
+        rappels_fiscaux=[
+            RappelFiscalReponse(**rappel)
+            for rappel in generer_rappels_fiscaux(frequence_declaration=frequence)
+        ],
         serie_mensuelle=serie_mensuelle,
         productivite=_productivite_depuis_donnees(donnees),
     )

@@ -50,7 +50,7 @@ const titresPage = {
   sommaire: { titre: 'Sommaire annuel', sousTitre: 'Performance et taxes à remettre' },
   categories: { titre: 'Catégories', sousTitre: 'Organisation des dépenses' },
   'depenses-recurrentes': { titre: 'Dépenses récurrentes', sousTitre: 'Génération automatique mensuelle ou journalière' },
-  'parametres-fiscaux': { titre: 'Paramètres fiscaux', sousTitre: 'Méthode régulière ou rapide' },
+  'parametres-fiscaux': { titre: 'Paramètres fiscaux', sousTitre: 'Méthode, fréquence et rappels' },
 }
 
 const page = computed(() => titresPage[route.name] || { titre: 'ComptaTaxi', sousTitre: '' })

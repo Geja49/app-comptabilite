@@ -6,6 +6,7 @@ from app.modeles import MethodeTpsTvq, ParametresFiscaux
 
 TAUX_DEFAUT = {
     "methode_tps_tvq": MethodeTpsTvq.REGULIERE.value,
+    "frequence_declaration": "annuelle",
     "tps_taux_reguliere": Decimal("0.05"),
     "tvq_taux_reguliere": Decimal("0.09975"),
     "tps_taux_rapide": Decimal("0.036"),

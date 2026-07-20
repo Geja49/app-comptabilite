@@ -15,9 +15,31 @@ const enregistrement = ref(false)
 const message = ref('')
 
 const methodeChoisie = ref('reguliere')
+const frequenceChoisie = ref('annuelle')
+
+const frequences = [
+  {
+    valeur: 'annuelle',
+    titre: 'Annuelle',
+    texte: 'Cas fréquent pour chauffeurs (paiement 30 avril, déclaration 15 juin).',
+  },
+  {
+    valeur: 'trimestrielle',
+    titre: 'Trimestrielle',
+    texte: 'Déclaration et paiement environ un mois après chaque trimestre.',
+  },
+  {
+    valeur: 'mensuelle',
+    titre: 'Mensuelle',
+    texte: 'Déclaration et paiement environ un mois après chaque mois.',
+  },
+]
 
 const modifie = computed(
-  () => parametres.value && methodeChoisie.value !== parametres.value.methode_tps_tvq,
+  () =>
+    parametres.value &&
+    (methodeChoisie.value !== parametres.value.methode_tps_tvq ||
+      frequenceChoisie.value !== (parametres.value.frequence_declaration || 'annuelle')),
 )
 
 async function charger() {
@@ -26,6 +48,7 @@ async function charger() {
   const { data } = await obtenirParametresFiscaux(store.annee)
   parametres.value = data
   methodeChoisie.value = data.methode_tps_tvq
+  frequenceChoisie.value = data.frequence_declaration || 'annuelle'
   chargement.value = false
 }
 
@@ -33,10 +56,15 @@ async function enregistrer() {
   if (!modifie.value) return
   enregistrement.value = true
   try {
-    const { data } = await definirMethodeFiscale(store.annee, methodeChoisie.value)
+    const { data } = await definirMethodeFiscale(
+      store.annee,
+      methodeChoisie.value,
+      frequenceChoisie.value,
+    )
     parametres.value = data
     methodeChoisie.value = data.methode_tps_tvq
-    message.value = 'Méthode enregistrée'
+    frequenceChoisie.value = data.frequence_declaration || 'annuelle'
+    message.value = 'Paramètres enregistrés'
   } finally {
     enregistrement.value = false
   }
@@ -94,10 +122,36 @@ watch(() => store.annee, charger, { immediate: true })
         </label>
       </div>
 
+      <div class="card space-y-3">
+        <div>
+          <h3 class="font-bold text-encre">Fréquence de déclaration TPS / TVQ</h3>
+          <p class="text-sm text-muet mt-1">
+            Selon la confirmation reçue de Revenu Québec. Utilisée pour les rappels du tableau de bord.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label
+            v-for="freq in frequences"
+            :key="freq.valeur"
+            class="rounded-xl border-2 p-3 cursor-pointer transition"
+            :class="frequenceChoisie === freq.valeur ? 'border-indigo-600 bg-indigo-50/50' : 'border-trait'"
+          >
+            <div class="flex items-start gap-2">
+              <input v-model="frequenceChoisie" type="radio" :value="freq.valeur" class="mt-1" />
+              <div>
+                <p class="font-semibold text-sm">{{ freq.titre }}</p>
+                <p class="text-xs text-muet mt-1 leading-relaxed">{{ freq.texte }}</p>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div class="card bg-slate-50">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <p class="text-sm text-slate-600">
-            Redevance de transport : <strong>{{ formaterMontant(parametres.redevance_par_course) }}</strong> par course
+            Redevance de transport :
+            <strong>{{ formaterMontant(parametres.redevance_par_course) }}</strong> par course
             (appliquée aux deux méthodes).
           </p>
           <div class="flex items-center gap-3">
@@ -111,6 +165,7 @@ watch(() => store.annee, charger, { immediate: true })
 
       <p class="text-sm text-slate-500">
         Le changement de méthode recalcule automatiquement le sommaire annuel {{ store.annee }}.
+        Les dates de rappels sont indicatives (Revenu Québec / ARC).
       </p>
     </template>
   </div>

@@ -80,6 +80,38 @@ const ratiosProductivite = computed(() => {
   ]
 })
 
+const rappelsFiscaux = computed(() => tableau.value?.rappels_fiscaux || [])
+
+function formaterDateLimite(iso) {
+  if (!iso) return ''
+  const [annee, mois, jour] = iso.split('-').map(Number)
+  return new Intl.DateTimeFormat('fr-CA', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(annee, mois - 1, jour))
+}
+
+function libelleJours(rappel) {
+  const j = rappel.jours_restants
+  if (j < 0) return `En retard de ${Math.abs(j)} j`
+  if (j === 0) return "Aujourd'hui"
+  return `Dans ${j} j`
+}
+
+function classeUrgence(urgence) {
+  if (urgence === 'echue' || urgence === 'haute') return 'border-rose-200 bg-rose-50/80'
+  if (urgence === 'moyenne') return 'border-amber-200 bg-amber-50/70'
+  return 'border-trait bg-barre/60'
+}
+
+function badgeUrgence(urgence) {
+  if (urgence === 'echue') return 'bg-rose-100 text-rose-800'
+  if (urgence === 'haute') return 'bg-orange-100 text-orange-800'
+  if (urgence === 'moyenne') return 'bg-amber-100 text-amber-900'
+  return 'bg-indigo-50 text-indigo-700'
+}
+
 async function charger() {
   chargement.value = true
   try {
@@ -178,6 +210,41 @@ onMounted(charger)
         <li v-for="(alerte, i) in tableau.alertes" :key="i" class="text-amber-800 text-sm flex gap-2">
           <span class="text-amber-500">•</span>
           <span>{{ alerte.message }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div v-if="rappelsFiscaux.length" class="card">
+      <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="font-bold text-encre">Rappels fiscaux</h3>
+          <p class="text-sm text-muet">
+            Déclarations et paiements à surveiller (Revenu Québec / ARC). Ajustez votre fréquence dans
+            <RouterLink to="/parametres-fiscaux" class="text-indigo-700 font-semibold">Paramètres fiscaux</RouterLink>.
+          </p>
+        </div>
+      </div>
+      <ul class="space-y-3">
+        <li
+          v-for="(rappel, i) in rappelsFiscaux"
+          :key="`${rappel.impot}-${rappel.type}-${rappel.date_limite}-${i}`"
+          class="rounded-xl border px-4 py-3"
+          :class="classeUrgence(rappel.urgence)"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-bold text-encre">{{ rappel.titre }}</p>
+              <p class="text-sm text-muet mt-1">{{ rappel.description }}</p>
+              <p class="text-xs text-muet mt-2">
+                {{ rappel.organisme }} · {{ rappel.periode }} ·
+                {{ rappel.type === 'declaration' ? 'Déclaration' : 'Paiement' }}
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="badge" :class="badgeUrgence(rappel.urgence)">{{ libelleJours(rappel) }}</span>
+              <p class="text-sm font-semibold text-encre mt-2">{{ formaterDateLimite(rappel.date_limite) }}</p>
+            </div>
+          </div>
         </li>
       </ul>
     </div>

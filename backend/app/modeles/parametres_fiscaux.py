@@ -12,6 +12,12 @@ class MethodeTpsTvq(StrEnum):
     RAPIDE = "rapide"
 
 
+class FrequenceDeclarationTpsTvq(StrEnum):
+    MENSUELLE = "mensuelle"
+    TRIMESTRIELLE = "trimestrielle"
+    ANNUELLE = "annuelle"
+
+
 class ParametresFiscaux(Base):
     __tablename__ = "parametres_fiscaux"
 
@@ -21,6 +27,9 @@ class ParametresFiscaux(Base):
     annee: Mapped[int] = mapped_column(Integer, primary_key=True)
     methode_tps_tvq: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MethodeTpsTvq.REGULIERE.value
+    )
+    frequence_declaration: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=FrequenceDeclarationTpsTvq.ANNUELLE.value
     )
     tps_taux_reguliere: Mapped[Decimal] = mapped_column(Numeric(8, 5), nullable=False, default=Decimal("0.05"))
     tvq_taux_reguliere: Mapped[Decimal] = mapped_column(Numeric(8, 5), nullable=False, default=Decimal("0.09975"))
