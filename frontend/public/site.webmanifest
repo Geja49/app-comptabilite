@@ -1,0 +1,22 @@
+{
+  "name": "ComptaTaxi",
+  "short_name": "ComptaTaxi",
+  "description": "Comptabilité taxi pour chauffeurs au Québec",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F1F4F9",
+  "theme_color": "#1D4ED8",
+  "lang": "fr-CA",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
