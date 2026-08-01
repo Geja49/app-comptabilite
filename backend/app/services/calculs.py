@@ -29,18 +29,35 @@ def calculer_taxes_depuis_ttc(montant_ttc: Decimal) -> dict[str, Decimal]:
     return {"montant_ht": montant_ht, "tps": tps, "tvq": tvq, "montant_total": total}
 
 
-def calculer_revenu(nombre_courses: int, revenu_brut: Decimal, pourboires: Decimal) -> dict[str, Decimal | int]:
+def calculer_revenu(
+    nombre_courses: int,
+    revenu_brut: Decimal,
+    pourboires: Decimal,
+    nombre_redevances: int = 0,
+) -> dict[str, Decimal | int]:
+    """Calcule les revenus d'une journée.
+
+    - nombre_courses : courses taxi simple (redevance ajoutée au total net)
+    - nombre_redevances : courses taxi de bus (redevance prélevée à la source, non ajoutée au total)
+    """
     revenu_brut = arrondir(revenu_brut)
     pourboires = arrondir(pourboires)
-    redevance = arrondir(Decimal(nombre_courses) * REDEVANCE_PAR_COURSE)
     tps = arrondir(revenu_brut * TPS_TAUX)
     tvq = arrondir(revenu_brut * TVQ_TAUX)
-    total_net = arrondir(revenu_brut + redevance + tps + tvq + pourboires)
+
+    redevance_simple = arrondir(Decimal(nombre_courses) * REDEVANCE_PAR_COURSE)
+    redevance_bus = arrondir(Decimal(nombre_redevances) * REDEVANCE_PAR_COURSE)
+    redevance_gouv = arrondir(redevance_simple + redevance_bus)
+    total_net = arrondir(revenu_brut + redevance_simple + tps + tvq + pourboires)
+
     return {
         "nombre_courses": nombre_courses,
+        "nombre_redevances": nombre_redevances,
+        "redevance_simple": redevance_simple,
+        "redevance_bus": redevance_bus,
         "revenu_brut": revenu_brut,
         "pourboires": pourboires,
-        "redevance_gouv": redevance,
+        "redevance_gouv": redevance_gouv,
         "tps_percue": tps,
         "tvq_percue": tvq,
         "total_net_encaisse": total_net,

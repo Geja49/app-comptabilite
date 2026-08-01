@@ -59,7 +59,12 @@ def construire_depense_calculee(depense: Depense) -> dict:
 
 
 def construire_revenu_calcule(revenu: Revenu) -> dict:
-    calc = calculs.calculer_revenu(revenu.nombre_courses, revenu.revenu_brut, revenu.pourboires)
+    calc = calculs.calculer_revenu(
+        revenu.nombre_courses,
+        revenu.revenu_brut,
+        revenu.pourboires,
+        nombre_redevances=revenu.nombre_redevances or 0,
+    )
     return {"id": revenu.id, "date": revenu.date, **calc}
 
 

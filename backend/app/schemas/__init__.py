@@ -21,6 +21,7 @@ class CategorieDepenseReponse(CategorieDepenseBase):
 class RevenuBase(BaseModel):
     date: date
     nombre_courses: int = Field(ge=0)
+    nombre_redevances: int = Field(ge=0, default=0)
     revenu_brut: Decimal = Field(ge=0)
     pourboires: Decimal = Field(ge=0, default=Decimal("0"))
 
@@ -36,10 +37,20 @@ class RevenuUpdate(RevenuBase):
 class RevenuReponse(RevenuBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    redevance_simple: Decimal
+    redevance_bus: Decimal
     redevance_gouv: Decimal
     tps_percue: Decimal
     tvq_percue: Decimal
     total_net_encaisse: Decimal
+
+
+class ConfigurationReponse(BaseModel):
+    redevance_prelevee_source: bool
+
+
+class ConfigurationUpdate(BaseModel):
+    redevance_prelevee_source: bool
 
 
 class DepenseBase(BaseModel):

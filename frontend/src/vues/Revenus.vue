@@ -12,6 +12,7 @@ const totaux = computed(() => {
   if (!revenus.value.length) return null
   return {
     nombre_courses: revenus.value.reduce((s, r) => s + r.nombre_courses, 0),
+    nombre_redevances: revenus.value.reduce((s, r) => s + Number(r.nombre_redevances || 0), 0),
     revenu_brut: revenus.value.reduce((s, r) => s + Number(r.revenu_brut), 0),
     redevance_gouv: revenus.value.reduce((s, r) => s + Number(r.redevance_gouv), 0),
     tps_percue: revenus.value.reduce((s, r) => s + Number(r.tps_percue), 0),
@@ -32,6 +33,7 @@ function nouveauRevenu() {
   formulaire.value = {
     date: `${store.annee}-${String(store.mois).padStart(2, '0')}-01`,
     nombre_courses: 0,
+    nombre_redevances: 0,
     revenu_brut: 0,
     pourboires: 0,
   }
@@ -39,6 +41,10 @@ function nouveauRevenu() {
 
 async function sauvegarder() {
   const payload = { ...formulaire.value }
+  if (payload.nombre_courses === 0 && payload.nombre_redevances === 0) {
+    alert('Indiquez au moins une course simple ou une course taxi de bus.')
+    return
+  }
   await avecConfirmationPassee(store.annee, store.mois, async (confirmer) => {
     await api.post(`/api/periodes/${store.annee}/${store.mois}/revenus`, {
       ...payload,
@@ -70,16 +76,29 @@ onMounted(charger)
       <button class="btn-primary" @click="nouveauRevenu">Ajouter une journée</button>
     </div>
 
+    <div class="card text-sm text-slate-600">
+      <p class="font-medium text-slate-800 mb-1">Courses simples et taxi de bus</p>
+      <p>
+        Pour chaque journée, indiquez séparément les <strong>courses simples</strong> et les
+        <strong>courses taxi de bus</strong>. La redevance des courses bus est prélevée à la source
+        et n'est pas ajoutée au total net.
+      </p>
+    </div>
+
     <div v-if="formulaire" class="card space-y-4">
-      <h4 class="font-medium">Nouvelle journée</h4>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <h4 class="font-medium">Recettes de la journée</h4>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div>
           <label class="text-sm text-slate-600">Date</label>
           <input v-model="formulaire.date" type="date" class="input" />
         </div>
         <div>
-          <label class="text-sm text-slate-600">Nombre de courses</label>
+          <label class="text-sm text-slate-600">Courses simples (taxi)</label>
           <input v-model.number="formulaire.nombre_courses" type="number" min="0" class="input" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Courses taxi de bus</label>
+          <input v-model.number="formulaire.nombre_redevances" type="number" min="0" class="input" />
         </div>
         <div>
           <label class="text-sm text-slate-600">Revenu brut ($)</label>
@@ -101,7 +120,8 @@ onMounted(charger)
         <thead>
           <tr>
             <th>Date</th>
-            <th>Courses</th>
+            <th>Courses simples</th>
+            <th>Courses bus</th>
             <th>Revenu brut</th>
             <th>Redevance gouv.</th>
             <th>TPS perçue</th>
@@ -112,11 +132,12 @@ onMounted(charger)
           </tr>
         </thead>
         <tbody>
-          <tr v-if="chargement"><td colspan="9" class="text-center text-slate-500">Chargement...</td></tr>
-          <tr v-else-if="!revenus.length"><td colspan="9" class="text-center text-slate-500">Aucun revenu saisi</td></tr>
+          <tr v-if="chargement"><td colspan="10" class="text-center text-slate-500">Chargement...</td></tr>
+          <tr v-else-if="!revenus.length"><td colspan="10" class="text-center text-slate-500">Aucun revenu saisi</td></tr>
           <tr v-for="revenu in revenus" :key="revenu.id">
             <td>{{ revenu.date }}</td>
             <td>{{ revenu.nombre_courses }}</td>
+            <td>{{ revenu.nombre_redevances }}</td>
             <td>{{ formaterMontant(revenu.revenu_brut) }}</td>
             <td>{{ formaterMontant(revenu.redevance_gouv) }}</td>
             <td>{{ formaterMontant(revenu.tps_percue) }}</td>
@@ -128,6 +149,7 @@ onMounted(charger)
           <tr v-if="totaux" class="bg-slate-50 font-semibold">
             <td>Total</td>
             <td>{{ totaux.nombre_courses }}</td>
+            <td>{{ totaux.nombre_redevances }}</td>
             <td>{{ formaterMontant(totaux.revenu_brut) }}</td>
             <td>{{ formaterMontant(totaux.redevance_gouv) }}</td>
             <td>{{ formaterMontant(totaux.tps_percue) }}</td>

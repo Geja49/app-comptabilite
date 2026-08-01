@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import parametres
-from app.routeurs import auth, categories, depenses_recurrentes, parametres_fiscaux, periodes, rapports, tresorerie
+from app.routeurs import auth, categories, configuration, depenses_recurrentes, parametres_fiscaux, periodes, rapports, tresorerie
 from app.securite import MiddlewareAuthentification, MiddlewareEnTetesSecurite, MiddlewareLimiteCorps
 
 _docs = None if parametres.est_production else "/docs"
@@ -35,6 +35,7 @@ app.add_middleware(
 
 app.include_router(auth.routeur)
 app.include_router(categories.routeur)
+app.include_router(configuration.routeur)
 app.include_router(depenses_recurrentes.routeur)
 app.include_router(parametres_fiscaux.routeur)
 app.include_router(periodes.routeur)

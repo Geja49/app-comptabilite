@@ -20,7 +20,7 @@ def exporter_mois_excel(annee: int, mois: int, donnees: dict) -> BytesIO:
     ws_revenus.append(["Registre Mensuel des Revenus (Transport de Personnes)"])
     ws_revenus.append([])
     ws_revenus.append([
-        "Date", "Nombre de courses", "Revenu Brut (avant taxes)",
+        "Date", "Courses simples", "Courses taxi de bus", "Revenu Brut (avant taxes)",
         "Redevance Gouv. (0,90$ / course)", "TPS Perçue (5%)", "TVQ Perçue (9,975%)",
         "Pourboires", "Total Net Encaissé",
     ])
@@ -28,6 +28,7 @@ def exporter_mois_excel(annee: int, mois: int, donnees: dict) -> BytesIO:
         ws_revenus.append([
             revenu["date"].isoformat(),
             revenu["nombre_courses"],
+            revenu.get("nombre_redevances", 0),
             float(revenu["revenu_brut"]),
             float(revenu["redevance_gouv"]),
             float(revenu["tps_percue"]),
@@ -38,6 +39,7 @@ def exporter_mois_excel(annee: int, mois: int, donnees: dict) -> BytesIO:
     if donnees["revenus"]:
         total = {
             "nombre_courses": sum(r["nombre_courses"] for r in donnees["revenus"]),
+            "nombre_redevances": sum(r.get("nombre_redevances", 0) for r in donnees["revenus"]),
             "revenu_brut": sum((r["revenu_brut"] for r in donnees["revenus"]), Decimal("0")),
             "redevance_gouv": sum((r["redevance_gouv"] for r in donnees["revenus"]), Decimal("0")),
             "tps_percue": sum((r["tps_percue"] for r in donnees["revenus"]), Decimal("0")),
@@ -46,7 +48,7 @@ def exporter_mois_excel(annee: int, mois: int, donnees: dict) -> BytesIO:
             "total_net_encaisse": sum((r["total_net_encaisse"] for r in donnees["revenus"]), Decimal("0")),
         }
         ws_revenus.append([
-            "Total", total["nombre_courses"], float(total["revenu_brut"]),
+            "Total", total["nombre_courses"], total["nombre_redevances"], float(total["revenu_brut"]),
             float(total["redevance_gouv"]), float(total["tps_percue"]), float(total["tvq_percue"]),
             float(total["pourboires"]), float(total["total_net_encaisse"]),
         ])

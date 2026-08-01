@@ -110,6 +110,14 @@ def lister_revenus(
     return appliquer_pagination(donnees["revenus"], decalage, limite)
 
 
+def _verifier_revenu_journalier(nombre_courses: int, nombre_redevances: int):
+    if nombre_courses == 0 and nombre_redevances == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Indiquez au moins une course simple ou une course taxi de bus.",
+        )
+
+
 @routeur.post("/revenus", response_model=RevenuReponse, status_code=201)
 def ajouter_revenu(
     annee: int,
@@ -121,11 +129,13 @@ def ajouter_revenu(
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
+    _verifier_revenu_journalier(donnees.nombre_courses, donnees.nombre_redevances)
     periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     revenu = Revenu(
         periode_id=periode.id,
         date=donnees.date,
         nombre_courses=donnees.nombre_courses,
+        nombre_redevances=donnees.nombre_redevances,
         revenu_brut=donnees.revenu_brut,
         pourboires=donnees.pourboires,
     )
@@ -149,11 +159,13 @@ def modifier_revenu(
     _verifier_periode(annee, mois)
     _verifier_modification_passee(annee, mois, donnees.confirmer_modification_passee)
     valider_date_dans_periode(donnees.date, annee, mois)
+    _verifier_revenu_journalier(donnees.nombre_courses, donnees.nombre_redevances)
     periode = obtenir_ou_creer_periode(session, annee, mois, utilisateur_id)
     revenu = session.get(Revenu, revenu_id)
     _exiger_appartenance_periode(revenu, periode, "Revenu introuvable")
     revenu.date = donnees.date
     revenu.nombre_courses = donnees.nombre_courses
+    revenu.nombre_redevances = donnees.nombre_redevances
     revenu.revenu_brut = donnees.revenu_brut
     revenu.pourboires = donnees.pourboires
     session.commit()

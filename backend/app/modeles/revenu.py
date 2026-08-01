@@ -15,6 +15,7 @@ class Revenu(Base):
     periode_id: Mapped[int] = mapped_column(ForeignKey("periodes.id", ondelete="CASCADE"), nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     nombre_courses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    nombre_redevances: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     revenu_brut: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     pourboires: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
 
