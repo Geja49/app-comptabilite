@@ -1,7 +1,7 @@
-"""redevance prelevee a la source
+"""revenus nombre_redevances et table configuration
 
-Revision ID: 002
-Revises: 001
+Revision ID: 008
+Revises: 007
 """
 
 from typing import Sequence, Union
@@ -9,8 +9,8 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "002"
-down_revision: Union[str, None] = "001"
+revision: str = "008"
+down_revision: Union[str, None] = "007"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -23,7 +23,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.execute("INSERT INTO configuration (id, redevance_prelevee_source) VALUES (1, false)")
+
     op.add_column("revenus", sa.Column("nombre_redevances", sa.Integer(), nullable=True))
+    op.execute("UPDATE revenus SET nombre_redevances = 0 WHERE nombre_redevances IS NULL")
+    op.alter_column("revenus", "nombre_redevances", nullable=False, server_default="0")
 
 
 def downgrade() -> None:
